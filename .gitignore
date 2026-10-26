@@ -1,0 +1,15 @@
+node_modules/
+.DS_Store
+*.log
+# 대형 미디어/산출물은 Git에 넣지 않는다 (필요 시 Git LFS 또는 외부 저장소)
+output/*
+runs/*
+assets/audio/*
+assets/video/*
+!**/.gitkeep
+
+# harness-kit
+.harness-backup-*/
+.claude/state/
+.env.telegram
+.env.discord

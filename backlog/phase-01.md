@@ -44,6 +44,7 @@ Video Factory는 Hypit / HyperFrames / FFmpeg 같은 기존 도구를 조합해 
 <!-- sdd:specs:start -->
 | ID | 슬러그 | 우선순위 | 상태 | 디렉토리 |
 |---|---|:---:|---|---|
+| `spec-01-01` | hyperframes-blocks | P? | Active | `specs/spec-01-01-hyperframes-blocks/` |
 <!-- sdd:specs:end -->
 
 ### spec-1-01 — hyperframes-blocks

@@ -36,16 +36,17 @@
 ## Task 3: 실행 및 결과 기록
 
 ### 3-1. smoke test
-- [ ] 빈 프로젝트 init + 렌더 성공 확인, 버전·명령을 기록
+- [x] 빈 프로젝트 init + 렌더 성공 확인 (1920x1080, 10초, 14.7초 소요), 버전·명령을 `docs/tool-findings.md`에 기록
 
 ### 3-2. 블록 15개 렌더
-- [ ] 러너 실행, 결과 JSON 확인 (`runs/phase-01/`)
-- [ ] 대조군 1개 재생 확인, 포스터 프레임 경로를 사용자에게 제공
-- [ ] 한국어 텍스트 변수 렌더 2개 이상, 사용자 판정 받기
+- [x] 러너 실행, 결과 JSON 확인 (`runs/phase-01/results.json`): 15/15 성공 (canopy-part-title 에셋 경로 문제 수정 후)
+- [ ] 대조군 1개 재생 확인(사용자), 포스터 프레임 경로 제공 (`runs/phase-01/posters/sheet.png`)
+- [x] 한국어 텍스트 변수 렌더 2개 (canopy-part-title, chatgpt-exchange), 프레임에서 글자 정상 표시 확인
+- [ ] 사용자 판정 받기 (한국어 표시, 시각 품질)
 
 ### 3-3. 문서화
-- [ ] `docs/tool-findings.md` HyperFrames 절 작성 (환경, 절차, 결과표, 미확인 목록)
-- [ ] Commit: `docs(spec-01-01): record hyperframes block render findings`
+- [x] `docs/tool-findings.md` HyperFrames 절 작성 (환경, 절차, 결과표, 미확인 목록)
+- [x] Commit: `docs(spec-01-01): record hyperframes block render findings`
 
 ---
 

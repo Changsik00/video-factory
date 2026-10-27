@@ -1,0 +1,216 @@
+{
+  "note": "후보 블록. group 은 태그 기준 추정이며 실측으로 확인한다. 규격은 레지스트리 메타(2026-10-27)",
+  "registry": "heygen-com/hyperframes",
+  "blocks": [
+    {
+      "name": "code-highlight",
+      "group": "cpu",
+      "width": 1920,
+      "height": 1080,
+      "duration": 5,
+      "tags": [
+        "code",
+        "code-animation",
+        "highlight",
+        "developer"
+      ]
+    },
+    {
+      "name": "data-chart",
+      "group": "cpu",
+      "width": 1920,
+      "height": 1080,
+      "duration": 15,
+      "tags": [
+        "data",
+        "chart",
+        "statistics"
+      ]
+    },
+    {
+      "name": "lt-bold-block",
+      "group": "cpu",
+      "width": 1920,
+      "height": 1080,
+      "duration": 4.8,
+      "tags": [
+        "lower-third",
+        "overlay",
+        "podcast",
+        "interview",
+        "bold"
+      ]
+    },
+    {
+      "name": "hw-title",
+      "group": "cpu",
+      "width": 1920,
+      "height": 1080,
+      "duration": 6,
+      "tags": [
+        "handwritten",
+        "typography",
+        "title-card",
+        "overlay"
+      ]
+    },
+    {
+      "name": "editorial-flash-overlay",
+      "group": "cpu",
+      "width": 1920,
+      "height": 1080,
+      "duration": 4,
+      "tags": [
+        "flash",
+        "editorial",
+        "social",
+        "light",
+        "transition",
+        "overlay",
+        "media-treatment-overlay"
+      ]
+    },
+    {
+      "name": "beat-freeze-cut",
+      "group": "cpu",
+      "width": 1920,
+      "height": 1080,
+      "duration": 6,
+      "tags": [
+        "transition",
+        "music",
+        "beat-driven",
+        "freeze-frame"
+      ]
+    },
+    {
+      "name": "chatgpt-exchange",
+      "group": "cpu",
+      "width": 1080,
+      "height": 1920,
+      "duration": 14.9,
+      "tags": [
+        "showcase",
+        "mock-ui",
+        "ai",
+        "chat",
+        "vertical",
+        "ad-template"
+      ]
+    },
+    {
+      "name": "canopy-part-title",
+      "group": "cpu",
+      "width": 1920,
+      "height": 1080,
+      "duration": 12,
+      "tags": [
+        "3d-motion",
+        "title-card",
+        "leaves",
+        "organic",
+        "depth-of-field",
+        "two-headlines",
+        "sweep"
+      ]
+    },
+    {
+      "name": "spain-map",
+      "group": "cpu",
+      "width": 1920,
+      "height": 1080,
+      "duration": 12,
+      "tags": [
+        "data",
+        "map",
+        "geography",
+        "spain",
+        "europe",
+        "choropleth"
+      ]
+    },
+    {
+      "name": "color-wheel",
+      "group": "webgpu",
+      "width": 1920,
+      "height": 1080,
+      "duration": 2,
+      "tags": [
+        "webgpu",
+        "webgpu-shader",
+        "background",
+        "gradient",
+        "rainbow",
+        "color"
+      ]
+    },
+    {
+      "name": "aurora",
+      "group": "webgpu",
+      "width": 1920,
+      "height": 1080,
+      "duration": 2,
+      "tags": [
+        "webgpu",
+        "webgpu-shader",
+        "background",
+        "light",
+        "aurora",
+        "sky"
+      ]
+    },
+    {
+      "name": "chrome-orb",
+      "group": "webgpu",
+      "width": 1920,
+      "height": 1080,
+      "duration": 2,
+      "tags": [
+        "webgpu",
+        "webgpu-shader",
+        "object",
+        "chrome",
+        "metal",
+        "material"
+      ]
+    },
+    {
+      "name": "code-3d-extrude",
+      "group": "webgl",
+      "width": 1920,
+      "height": 1080,
+      "duration": 8,
+      "tags": [
+        "code",
+        "code-animation",
+        "3d",
+        "webgl",
+        "developer"
+      ]
+    },
+    {
+      "name": "cinematic-zoom",
+      "group": "webgl",
+      "width": 1920,
+      "height": 1080,
+      "duration": 4,
+      "tags": [
+        "transition",
+        "shader"
+      ]
+    },
+    {
+      "name": "camera-dolly-zoom",
+      "group": "3d",
+      "width": 1920,
+      "height": 1080,
+      "duration": 4,
+      "tags": [
+        "camera",
+        "depth",
+        "3d",
+        "cinematic"
+      ]
+    }
+  ]
+}

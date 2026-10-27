@@ -39,13 +39,12 @@
 
 | 그룹 | 블록 |
 |---|---|
-| GPU 비의존 추정 (대조군) | `code-highlight`, `data-chart`, `lt-bold-block`, `hw-title`, `editorial-flash-overlay`, `beat-freeze-cut` |
-| webgpu | `aurora`, `chrome-orb` |
-| webgl / shader | `code-3d-extrude`, `cinematic-zoom` |
-| 3D | `camera-dolly-zoom` |
-| 기타 | `chatgpt-exchange`(세로 1080x1920), `canopy-part-title`, `spain-map`, `color-wheel` |
+| GPU 비의존 추정 (대조군, 9) | `code-highlight`, `data-chart`, `lt-bold-block`, `hw-title`, `editorial-flash-overlay`, `beat-freeze-cut`, `chatgpt-exchange`(세로 1080x1920), `canopy-part-title`, `spain-map` |
+| webgpu (3) | `aurora`, `chrome-orb`, `color-wheel` |
+| webgl / shader (2) | `code-3d-extrude`, `cinematic-zoom` |
+| 3D (1) | `camera-dolly-zoom` |
 
-"GPU 비의존"은 태그 기준 추정이며 실측으로 확인한다.
+"GPU 비의존"은 태그(webgpu/webgl/shader/3d 없음) 기준 추정이며 실측으로 확인한다. `color-wheel`은 조사 후 webgpu 태그가 확인되어 대조군에서 옮겼다.
 
 ## Out of Scope
 
@@ -79,7 +78,7 @@
 #### [NEW] `catalog/validation/blocks.json`
 후보 블록 목록과 그룹, 기대 dimensions/duration(레지스트리 메타 기준).
 
-#### [NEW] `scripts/lib/summarize.mjs`, `tests/summarize.test.mjs`
+#### [NEW] `scripts/lib/summarize.mjs`, `tests/summarize.test.mjs`, `tests/blocks-list.test.mjs`
 렌더 결과 레코드(`name, status, reason, ms, probe`)를 요약표(Markdown)와 통계로 변환. 메타 불일치 판정 포함. `node --test`로 실행.
 
 #### [NEW] `scripts/render-blocks.mjs`
@@ -89,12 +88,12 @@
 HyperFrames 절: 환경, 절차, 결과표, 미확인 목록.
 
 #### [MODIFY] `package.json`
-`test` 스크립트 추가(`node --test tests/`). 의존성 추가 없음.
+`test` 스크립트 추가(`node --test "tests/*.test.mjs"`; Node 22.14 는 디렉터리 인자를 받지 않음), `engines.node` 를 `>=22`로 정정. 의존성 추가 없음.
 
 ## 검증 계획
 
 ```bash
-node --test tests/                       # summarize 단위 테스트
+npm test                                 # node --test "tests/*.test.mjs"
 node scripts/render-blocks.mjs --dry-run # 목록·레지스트리 이름 검증 (렌더 없음)
 node scripts/render-blocks.mjs           # 실제 렌더 (수 분 소요 예상)
 ffprobe -v error -show_streams runs/phase-01/hf-sandbox/renders/<블록>.mp4

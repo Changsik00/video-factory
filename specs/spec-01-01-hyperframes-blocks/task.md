@@ -8,18 +8,18 @@
 ## Task 1: 후보 목록과 결과 요약 로직 (TDD)
 
 ### 1-1. 브랜치 생성
-- [ ] `git checkout -b spec-01-01-hyperframes-blocks`
+- [x] `git checkout -b spec-01-01-hyperframes-blocks`
 
 ### 1-2. 테스트 작성 (TDD Red)
-- [ ] `tests/summarize.test.mjs`: 성공/실패/부분 분류, 메타 불일치 판정, 빈 입력, 요약표 출력
-- [ ] `tests/blocks-list.test.mjs`: `catalog/validation/blocks.json`이 15개, 중복 없음, 그룹 4개 이상을 포함
-- [ ] 테스트 실행 → Fail 확인
-- [ ] Commit: `test(spec-01-01): add failing tests for block list and summarize`
+- [x] `tests/summarize.test.mjs`: 성공/실패/부분 분류, 메타 불일치 판정, 빈 입력, 요약표 출력
+- [x] `tests/blocks-list.test.mjs`: `catalog/validation/blocks.json`이 15개, 중복 없음, 그룹 4개 이상을 포함
+- [x] 테스트 실행 → Fail 확인
+- [x] Commit: `test(spec-01-01): add failing tests for block list and summarize`
 
 ### 1-3. 구현 (TDD Green)
-- [ ] `catalog/validation/blocks.json`, `scripts/lib/summarize.mjs`, `package.json` test 스크립트
-- [ ] `node --test tests/` → Pass 확인
-- [ ] Commit: `feat(spec-01-01): add block list and result summarizer`
+- [x] `catalog/validation/blocks.json`, `scripts/lib/summarize.mjs`, `package.json` test 스크립트
+- [x] `npm test` → 16개 Pass 확인
+- [x] Commit: `feat(spec-01-01): add block list and result summarizer`
 
 ---
 

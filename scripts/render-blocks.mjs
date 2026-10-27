@@ -5,11 +5,11 @@
 //   node scripts/render-blocks.mjs --only=x --variables='{"title":"안녕"}' --suffix=-ko
 // 실패는 그대로 기록한다. 모의 성공 결과를 만들지 않는다.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { classify, metaMismatches, summarize, toMarkdown } from './lib/summarize.mjs';
-import { compositionPath, inferReason, missingFromRegistry, parseSignalstats, tail, visualVerdict } from './lib/diagnose.mjs';
+import { assetCopies, compositionPath, inferReason, missingFromRegistry, parseSignalstats, tail, visualVerdict } from './lib/diagnose.mjs';
 
 const HF_VERSION = '0.8.206';
 const REGISTRY_INDEX = 'https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry/registry.json';
@@ -91,6 +91,9 @@ for (const b of targets) {
   } else {
     let written = [];
     try { written = JSON.parse(add.stdout).written ?? []; } catch { /* JSON 이 아니면 기본 경로로 시도 */ }
+    const copies = assetCopies(written, SANDBOX); // 하위 폴더 블록의 assets 를 루트로 (렌더러가 /assets/... 를 루트에서 찾음)
+    for (const c of copies) { mkdirSync(path.dirname(c.to), { recursive: true }); copyFileSync(c.from, c.to); }
+    if (copies.length) record.assetsCopied = copies.length;
     const comp = compositionPath(b.name, written, SANDBOX) ?? `compositions/${b.name}.html`;
     const out = path.join('renders', `${b.name}${suffix}.mp4`);
     const renderArgs = ['render', '--composition', comp, '--quality', quality, '--output', out, '--quiet'];

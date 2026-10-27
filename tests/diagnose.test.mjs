@@ -93,3 +93,23 @@ test('visualVerdict: 프레임 간 변화가 거의 없으면 static', () => {
 test('visualVerdict: 프레임 정보가 없으면 unknown', () => {
   assert.equal(visualVerdict({ frames: 0, ymaxMax: 0, ydifMax: 0 }), 'unknown');
 });
+
+import { assetCopies } from '../scripts/lib/diagnose.mjs';
+
+test('assetCopies: 하위 폴더 블록의 assets 를 프로젝트 루트 assets 로', () => {
+  const written = [
+    '/p/compositions/canopy-part-title/canopy-part-title.html',
+    '/p/compositions/canopy-part-title/assets/leaf.webp',
+    '/p/compositions/canopy-part-title/assets/sub/normal.webp',
+    '/p/compositions/canopy-part-title/SKILL.md',
+  ];
+  assert.deepEqual(assetCopies(written, '/p'), [
+    { from: '/p/compositions/canopy-part-title/assets/leaf.webp', to: '/p/assets/leaf.webp' },
+    { from: '/p/compositions/canopy-part-title/assets/sub/normal.webp', to: '/p/assets/sub/normal.webp' },
+  ]);
+});
+
+test('assetCopies: 이미 루트 assets 이거나 assets 폴더가 없으면 빈 배열', () => {
+  assert.deepEqual(assetCopies(['/p/compositions/a.html'], '/p'), []);
+  assert.deepEqual(assetCopies(['/p/assets/x.png'], '/p'), []);
+});

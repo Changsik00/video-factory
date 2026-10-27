@@ -50,3 +50,19 @@ export function visualVerdict({ frames, ymaxMax, ydifMax }) {
   if (ydifMax < STATIC_YDIF_MAX) return 'static';
   return 'ok';
 }
+
+// 하위 폴더에 설치된 블록의 assets 를 렌더러가 찾는 프로젝트 루트 assets 로 복사할 목록.
+// (렌더러는 `/assets/...` 를 프로젝트 루트에서 찾는다 — canopy-part-title 에서 404 로 확인)
+export function assetCopies(written, projectDir) {
+  const rootAssets = path.join(projectDir, 'assets') + path.sep;
+  const out = [];
+  for (const f of written) {
+    const rel = path.relative(path.join(projectDir, 'compositions'), f);
+    const m = rel.split(path.sep);
+    const i = m.indexOf('assets');
+    if (!rel.startsWith('..') && i > 0 && f.startsWith(path.join(projectDir, 'compositions'))) {
+      out.push({ from: f, to: rootAssets + m.slice(i + 1).join(path.sep) });
+    }
+  }
+  return out;
+}

@@ -24,5 +24,5 @@ Video Factory에 한정된 원칙. 일반 SDD 절차(Plan Accept, TDD, 브랜치
 - CLI는 `npx hyperframes@0.8.206`으로 고정해 호출한다. `skills update`, `upgrade`는 spec 없이 실행하지 않는다.
 - 텔레메트리·업데이트 확인은 `.claude/settings.json`의 `env`로 끈다. 렌더 후 `feedback` 전송도 하지 않는다.
 - `publish`, `cloud`, `lambda`, `cloudrun`, `usage` 등 외부로 나가는 명령은 사용자가 요청할 때만 쓴다.
-- 음성·음악·효과음을 기본으로 붙이지 않는다 (첫 제품은 무음 + 자막). `media-use`는 설치하지 않는다.
+- 음성·음악·효과음은 사용자가 요청할 때만 추가한다. 스킬의 "15초 이상이면 음악을 넣는다"는 기본값은 따르지 않는다. `media-use`는 설치하지 않는다.
 - 내려받기나 유료 호출이 필요한 옵션(`--on-device` 검색 등)은 사용자 확인 후에만 쓴다.

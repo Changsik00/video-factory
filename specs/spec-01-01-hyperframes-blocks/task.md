@@ -40,9 +40,9 @@
 
 ### 3-2. 블록 15개 렌더
 - [x] 러너 실행, 결과 JSON 확인 (`runs/phase-01/results.json`): 15/15 성공 (canopy-part-title 에셋 경로 문제 수정 후)
-- [ ] 대조군 1개 재생 확인(사용자), 포스터 프레임 경로 제공 (`runs/phase-01/posters/sheet.png`)
+- [x] 대조군 1개 재생 확인(사용자), 포스터 프레임 경로 제공 (`runs/phase-01/posters/sheet.png`)
 - [x] 한국어 텍스트 변수 렌더 2개 (canopy-part-title, chatgpt-exchange), 프레임에서 글자 정상 표시 확인
-- [ ] 사용자 판정 받기 (한국어 표시, 시각 품질)
+- [x] 사용자 판정 받기 (한국어 표시, 시각 품질) — "좋아" 응답
 
 ### 3-3. 문서화
 - [x] `docs/tool-findings.md` HyperFrames 절 작성 (환경, 절차, 결과표, 미확인 목록)
@@ -54,13 +54,13 @@
 
 ### 🚦 Pre-Push Quality Gate
 
-- [ ] **전체 테스트 실행** → 모두 PASS
+- [x] **전체 테스트 실행** → 모두 PASS
 
 ### 📝 산출물 작성
 
-- [ ] **walkthrough.md 작성**
-- [ ] **pr_description.md 작성**
-- [ ] Commit: `docs(spec-01-01): ship walkthrough and pr description`
+- [x] **walkthrough.md 작성**
+- [x] **pr_description.md 작성**
+- [x] Commit: `docs(spec-01-01): ship walkthrough and pr description`
 
 ### 🚀 Push & PR
 

@@ -115,8 +115,8 @@ ffprobe -v error -show_streams runs/phase-01/hf-sandbox/renders/<블록>.mp4
 
 ## ✅ Definition of Done
 
-- [ ] 모든 테스트 PASS
-- [ ] 후보 15개 전부 결과(성공/실패/부분)와 원인이 `docs/tool-findings.md`에 기록됨
-- [ ] 한국어 표시 확인 결과를 사용자가 판정해 기록함
-- [ ] `walkthrough.md` 와 `pr_description.md` 작성 및 ship commit
+- [x] 모든 테스트 PASS
+- [x] 후보 15개 전부 결과(성공/실패/부분)와 원인이 `docs/tool-findings.md`에 기록됨
+- [x] 한국어 표시 확인 결과를 사용자가 판정해 기록함
+- [x] `walkthrough.md` 와 `pr_description.md` 작성 및 ship commit
 - [ ] `spec-01-01-hyperframes-blocks` 브랜치 push 완료

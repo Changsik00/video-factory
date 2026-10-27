@@ -4,13 +4,14 @@ AI 에이전트 기반 유튜브 콘텐츠 제작 파이프라인. 주제와 참
 
 핵심은 영상 템플릿이 아니라 **재사용 가능한 제작 시스템**이다: 콘텐츠 형식(Format), 시각 컴포넌트(Component), 제작 절차(Workflow)를 분리해 재사용하고, 변경된 부분만 다시 생성한다.
 
-> 상태: **Phase 0 (기존 도구 조사/검증)**. 아직 구현된 기능은 없다.
+> 상태: **Phase 1 (도구 검증)**. 첫 제품은 이펙트·샘플 쇼케이스(음성 없음, 자막만) — [기획](docs/plan/product-and-script-plan.md). 아직 구현된 기능은 없다.
 
 ## 문서
 - [제안서](docs/proposal/proposal.md) — 비전, 아키텍처, 단계별 계획
 - [검토 노트](docs/proposal/review.md) — 제안서의 모호점과 결정 필요 사항
+- [제품 기획](docs/plan/product-and-script-plan.md) — 이펙트·샘플 쇼케이스, 대본·자막 형식, 로드맵
 - [프로젝트 원칙](docs/project-principles.md) — 이 프로젝트 고유의 원칙
-- [현재 Phase](backlog/phase-01.md) — Phase 0 도구 검증 (진행 현황은 `backlog/queue.md`)
+- [현재 Phase](backlog/phase-01.md) — Phase 1 도구 검증 (진행 현황은 `backlog/queue.md`)
 - 작업 절차는 [harness-kit](https://github.com/Changsik00/harness-kit)(SDD)을 따른다: `/hk-align`, `sdd status`
 
 ## 구조
@@ -26,4 +27,4 @@ docs/                제안서, 프로젝트 원칙, 도구 검증 결과
 ```
 
 ## 개발 환경
-Node.js >= 20, pnpm. (`pnpm install`은 패키지가 추가되는 Phase 1부터 의미가 있다.)
+Node.js >= 22, pnpm. (`pnpm install`은 패키지가 추가되는 Phase 1부터 의미가 있다.)

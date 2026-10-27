@@ -40,3 +40,56 @@ test('tail: 마지막 N줄만, ANSI 제거', () => {
   assert.equal(tail('a\nb\n\u001b[31mc\u001b[0m\nd', 2), 'c\nd');
   assert.equal(tail('', 3), '');
 });
+
+import { compositionPath, parseSignalstats, visualVerdict } from '../scripts/lib/diagnose.mjs';
+
+test('compositionPath: 단일 파일 블록', () => {
+  const written = ['/x/compositions/code-highlight.html'];
+  assert.equal(compositionPath('code-highlight', written, '/x'), 'compositions/code-highlight.html');
+});
+
+test('compositionPath: 하위 폴더 블록(assets, SKILL.md 포함)', () => {
+  const written = [
+    '/x/compositions/canopy-part-title/canopy-part-title.html',
+    '/x/compositions/canopy-part-title/assets/leaf.webp',
+    '/x/compositions/canopy-part-title/SKILL.md',
+  ];
+  assert.equal(compositionPath('canopy-part-title', written, '/x'), 'compositions/canopy-part-title/canopy-part-title.html');
+});
+
+test('compositionPath: 이름이 맞는 html 이 없으면 null', () => {
+  assert.equal(compositionPath('a', ['/x/compositions/b.html'], '/x'), null);
+  assert.equal(compositionPath('a', [], '/x'), null);
+});
+
+const stats = (rows) => rows.map(([avg, max, dif], i) =>
+  `frame:${i}    pts:${i}\nlavfi.signalstats.YAVG=${avg}\nlavfi.signalstats.YMAX=${max}\nlavfi.signalstats.YDIF=${dif}`).join('\n');
+
+test('parseSignalstats: 프레임 수, YMAX 최대, YDIF 최대', () => {
+  const s = parseSignalstats(stats([[10, 50, 0], [30, 200, 0.4], [20, 100, 0.2]]));
+  assert.deepEqual(s, { frames: 3, ymaxMax: 200, ydifMax: 0.4 });
+});
+
+test('parseSignalstats: 출력이 없으면 frames 0', () => {
+  assert.equal(parseSignalstats('').frames, 0);
+});
+
+test('visualVerdict: 움직임 있는 정상 영상', () => {
+  assert.equal(visualVerdict({ frames: 90, ymaxMax: 240, ydifMax: 0.3 }), 'ok');
+});
+
+test('visualVerdict: 미세하지만 움직임이 있는 영상(회전 오브 등)은 ok', () => {
+  assert.equal(visualVerdict({ frames: 60, ymaxMax: 234, ydifMax: 0.05 }), 'ok');
+});
+
+test('visualVerdict: 전부 검은 화면 -> blank', () => {
+  assert.equal(visualVerdict({ frames: 90, ymaxMax: 16, ydifMax: 0 }), 'blank');
+});
+
+test('visualVerdict: 프레임 간 변화가 거의 없으면 static', () => {
+  assert.equal(visualVerdict({ frames: 300, ymaxMax: 243, ydifMax: 0.0053 }), 'static');
+});
+
+test('visualVerdict: 프레임 정보가 없으면 unknown', () => {
+  assert.equal(visualVerdict({ frames: 0, ymaxMax: 0, ydifMax: 0 }), 'unknown');
+});

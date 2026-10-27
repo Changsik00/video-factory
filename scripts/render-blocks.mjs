@@ -9,7 +9,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { classify, metaMismatches, summarize, toMarkdown } from './lib/summarize.mjs';
-import { inferReason, missingFromRegistry, tail } from './lib/diagnose.mjs';
+import { compositionPath, inferReason, missingFromRegistry, parseSignalstats, tail, visualVerdict } from './lib/diagnose.mjs';
 
 const HF_VERSION = '0.8.206';
 const REGISTRY_INDEX = 'https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry/registry.json';
@@ -44,6 +44,11 @@ function probe(file) {
   if (r.status !== 0) return undefined;
   const s = JSON.parse(r.stdout).streams?.[0];
   return s ? { width: s.width, height: s.height, duration: Number(s.duration), codec: s.codec_name } : undefined;
+}
+
+function visualStats(file) {
+  const r = spawnSync('ffmpeg', ['-v', 'error', '-i', file, '-vf', 'signalstats,metadata=print:file=-', '-f', 'null', '-'], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
+  return r.status === 0 ? parseSignalstats((r.stdout ?? '') + (r.stderr ?? '')) : undefined;
 }
 
 const list = JSON.parse(readFileSync(path.join(ROOT, 'catalog/validation/blocks.json'), 'utf8')).blocks;
@@ -84,18 +89,28 @@ for (const b of targets) {
   if (add.status !== 0) {
     Object.assign(record, { stage: 'add', ms: add.ms, reason: inferReason(add.stderr, add), log: tail(add.stderr || add.stdout, 15) });
   } else {
+    let written = [];
+    try { written = JSON.parse(add.stdout).written ?? []; } catch { /* JSON 이 아니면 기본 경로로 시도 */ }
+    const comp = compositionPath(b.name, written, SANDBOX) ?? `compositions/${b.name}.html`;
     const out = path.join('renders', `${b.name}${suffix}.mp4`);
-    const renderArgs = ['render', '--composition', `compositions/${b.name}.html`, '--quality', quality, '--output', out, '--quiet'];
+    const renderArgs = ['render', '--composition', comp, '--quality', quality, '--output', out, '--quiet'];
     if (typeof args.variables === 'string') renderArgs.push('--variables', args.variables);
     let r = hf(renderArgs, SANDBOX);
     let attempts = 1;
     if (r.timedOut) { r = hf(renderArgs, SANDBOX); attempts = 2; } // 재시도는 타임아웃일 때만, 1회
     Object.assign(record, { stage: 'render', attempts, ms: r.ms, renderExit: r.status, output: out });
-    if (r.status === 0) record.probe = probe(path.join(SANDBOX, out));
+    if (r.status === 0) {
+      record.probe = probe(path.join(SANDBOX, out));
+      const vs = visualStats(path.join(SANDBOX, out));
+      record.visual = vs ? { ...vs, verdict: visualVerdict(vs) } : { verdict: 'unknown' };
+    }
     else Object.assign(record, { reason: inferReason(r.stderr, r), log: tail(r.stderr || r.stdout, 15) });
   }
   record.status = classify(record);
-  if (record.status === 'partial') record.reason = metaMismatches(record).join('; ') || 'no ffprobe result';
+  if (record.status === 'success' && record.visual && record.visual.verdict !== 'ok') {
+    record.status = 'partial';
+    record.reason = `visual: ${record.visual.verdict}`;
+  } else if (record.status === 'partial') record.reason = metaMismatches(record).join('; ') || 'no ffprobe result';
   rows.push(record);
   console.log(`${record.status.padEnd(7)} ${b.name} (${(record.ms / 1000).toFixed(1)}s)${record.reason ? ' ' + record.reason : ''}`);
   writeFileSync(path.join(RUN_DIR, `results${suffix}.json`), JSON.stringify({ hyperframes: HF_VERSION, quality, rows }, null, 2));

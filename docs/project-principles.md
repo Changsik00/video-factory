@@ -18,3 +18,11 @@ Video Factory에 한정된 원칙. 일반 SDD 절차(Plan Accept, TDD, 브랜치
 - 승인된 산출물을 명시적 변경 없이 덮어쓰지 않는다.
 - 사용자 승인 없이 외부 게시/업로드를 하지 않는다.
 - 재시도는 횟수·비용 상한 안에서만 한다. 같은 실패를 반복하지 않는다.
+
+## HyperFrames 스킬 사용 규칙
+`.claude/skills/`의 `hyperframes`, `hyperframes-cli`, `hyperframes-registry`는 `skills-lock.json`의 해시로 고정한다 (2026-10-28 검토 기준). 스킬 지시와 이 문서가 충돌하면 이 문서가 우선한다.
+- CLI는 `npx hyperframes@0.8.206`으로 고정해 호출한다. `skills update`, `upgrade`는 spec 없이 실행하지 않는다.
+- 텔레메트리·업데이트 확인은 `.claude/settings.json`의 `env`로 끈다. 렌더 후 `feedback` 전송도 하지 않는다.
+- `publish`, `cloud`, `lambda`, `cloudrun`, `usage` 등 외부로 나가는 명령은 사용자가 요청할 때만 쓴다.
+- 음성·음악·효과음은 사용자가 요청할 때만 추가한다. 스킬의 "15초 이상이면 음악을 넣는다"는 기본값은 따르지 않는다. `media-use`는 설치하지 않는다.
+- 내려받기나 유료 호출이 필요한 옵션(`--on-device` 검색 등)은 사용자 확인 후에만 쓴다.

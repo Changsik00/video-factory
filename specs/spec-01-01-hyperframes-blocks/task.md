@@ -26,9 +26,10 @@
 ## Task 2: 렌더 러너
 
 ### 2-1. 러너 구현
-- [ ] `scripts/render-blocks.mjs` (`--dry-run` 포함): 샌드박스 init, 블록별 add/render/ffprobe, 실패 로그 기록, 재시도 1회 상한
-- [ ] `--dry-run`으로 레지스트리에 후보 15개가 모두 존재하는지 확인 (모의 성공 금지: 네트워크/도구 부재 시 실패로 보고)
-- [ ] Commit: `feat(spec-01-01): add block render runner`
+- [x] `scripts/render-blocks.mjs` (`--dry-run` 포함): 샌드박스 init, 블록별 add/render/ffprobe, 실패 로그 기록, 재시도 1회 상한(타임아웃일 때만)
+- [x] `--dry-run`으로 레지스트리에 후보 15개가 모두 존재하는지 확인 (모의 성공 금지: 네트워크/도구 부재 시 실패로 보고)
+- [x] `tests/diagnose.test.mjs` + `scripts/lib/diagnose.mjs` (실패 원인 분류, 레지스트리 이름 검증), 테스트 24개 PASS
+- [x] Commit: `feat(spec-01-01): add block render runner`
 
 ---
 

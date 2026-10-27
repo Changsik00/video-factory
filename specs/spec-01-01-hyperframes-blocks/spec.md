@@ -81,8 +81,8 @@
 #### [NEW] `scripts/lib/summarize.mjs`, `tests/summarize.test.mjs`, `tests/blocks-list.test.mjs`
 렌더 결과 레코드(`name, status, reason, ms, probe`)를 요약표(Markdown)와 통계로 변환. 메타 불일치 판정 포함. `node --test`로 실행.
 
-#### [NEW] `scripts/render-blocks.mjs`
-샌드박스 초기화, 블록별 add/render/ffprobe, 실패 시 stderr 마지막 N줄 기록. 재시도는 블록당 1회까지(원칙: 같은 실패 반복 금지).
+#### [NEW] `scripts/render-blocks.mjs`, `scripts/lib/diagnose.mjs`, `tests/diagnose.test.mjs`
+샌드박스 초기화, 블록별 add/render/ffprobe, 실패 시 stderr 마지막 N줄과 원인 분류(gpu/network/font/timeout/other) 기록. 재시도는 타임아웃일 때만 1회(결정적 실패를 반복하지 않는다). `hyperframes` 버전을 0.8.206으로 고정하고, 텔레메트리(`HYPERFRAMES_NO_TELEMETRY`, `DO_NOT_TRACK`)와 스킬 자동 설치, `add` 의 클립보드 복사(`--no-clipboard`)를 끈다.
 
 #### [NEW] `docs/tool-findings.md`
 HyperFrames 절: 환경, 절차, 결과표, 미확인 목록.

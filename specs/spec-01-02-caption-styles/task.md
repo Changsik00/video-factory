@@ -43,11 +43,11 @@
 - [x] 테스트: `hostHtml` 이 배경 블록을 자막보다 아래 레이어로 마운트 (`tests/captions-inject.test.mjs`) → Fail 확인 → 구현
 - [x] 러너 `--backdrop=<블록>`: 블록 add(에셋 복사 포함) → 호스트에 마운트 → 렌더
 - [x] 밝기가 다른 블록 3개 × 스타일 5개 렌더, 프레임 시트 생성
-- [ ] 사용자 판정 받기 (배경 위 가독성)
+- [ ] 사용자 판정 받기 (배경 위 가독성) — 대기
 - [x] Commit: `feat(spec-01-02): render captions over block backdrops`
 
 ### 3-2. 문서화
-- [ ] `docs/tool-findings.md` 자막 컴포넌트 절 작성
+- [x] `docs/tool-findings.md` 자막 컴포넌트 절 작성
 - [ ] Commit: `docs(spec-01-02): record caption component findings`
 
 ---

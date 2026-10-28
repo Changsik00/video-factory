@@ -56,3 +56,37 @@ export function readDuration(html) {
   if (!m) throw new Error('컴포넌트에서 data-duration 을 찾지 못했습니다');
   return Number(m[1]);
 }
+
+// 루트 컴포지션이 자막 컴포넌트를 마운트하는 공식 배선(wiring-blocks). 배경 블록은 자막보다 아래 레이어.
+// 기본 바탕은 자막이 보이도록 어두운 단색.
+export function hostHtml({ id, src, duration, backdrop }) {
+  const mount = (elId, compId, compSrc, track) =>
+    `<div id="${elId}" data-composition-id="${compId}" data-composition-src="${compSrc}" data-start="0" data-duration="${duration}" data-track-index="${track}" data-width="1920" data-height="1080"></div>`;
+  const layers = [
+    backdrop ? mount('backdrop', backdrop.id, backdrop.src, 0) : null,
+    mount('caption-host', id, src, 1),
+  ].filter(Boolean).map((l) => `      ${l}`).join('\n');
+  return `<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #1f2430; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="${duration}" data-width="1920" data-height="1080">
+${layers}
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
+`;
+}

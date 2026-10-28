@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 // 자막 컴포넌트를 같은 SRT 로 조립·검사·렌더하고 결과를 기록한다.
 //   node scripts/render-captions.mjs --dry-run         SRT 검증과 레지스트리 이름 확인만
-//   node scripts/render-captions.mjs [--only=a,b] [--quality=draft] [--timeout=300]
+//   node scripts/render-captions.mjs [--only=a,b] [--quality=draft] [--timeout=300] [--backdrop=<블록>]
 // 실패는 그대로 기록한다. 모의 성공 결과를 만들지 않는다.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { cueGroups, injectWords, readDuration } from './lib/captions-inject.mjs';
+import { cueGroups, hostHtml, injectWords, readDuration } from './lib/captions-inject.mjs';
 import { parseSrt, toWords, validateCues } from './lib/srt.mjs';
 import { classify, metaMismatches } from './lib/summarize.mjs';
-import { inferReason, missingFromRegistry, parseSignalstats, summarizeCheck, tail, visualVerdict } from './lib/diagnose.mjs';
+import { assetCopies, compositionPath, inferReason, missingFromRegistry, parseSignalstats, summarizeCheck, tail, visualVerdict } from './lib/diagnose.mjs';
 
 const HF_VERSION = '0.8.206';
 const REGISTRY_INDEX = 'https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry/registry.json';
@@ -26,6 +26,8 @@ const args = Object.fromEntries(
 );
 const quality = args.quality ?? 'draft';
 const timeoutMs = Number(args.timeout ?? 300) * 1000;
+const backdropName = typeof args.backdrop === 'string' ? args.backdrop : null;
+const tag = backdropName ? `-on-${backdropName}` : '';
 
 const env = { ...process.env, HYPERFRAMES_NO_TELEMETRY: '1', DO_NOT_TRACK: '1', HYPERFRAMES_SKIP_SKILLS: '1', HYPERFRAMES_NO_UPDATE_CHECK: '1' };
 
@@ -48,33 +50,6 @@ function probe(file) {
 function visualStats(file) {
   const r = spawnSync('ffmpeg', ['-v', 'error', '-i', file, '-vf', 'signalstats,metadata=print:file=-', '-f', 'null', '-'], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
   return r.status === 0 ? parseSignalstats((r.stdout ?? '') + (r.stderr ?? '')) : undefined;
-}
-
-// 루트 컴포지션이 컴포넌트를 마운트하는 공식 배선(wiring-blocks). 배경은 자막이 보이도록 어두운 단색.
-function hostHtml(id, src, duration) {
-  return `<!doctype html>
-<html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=1920, height=1080" />
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
-    <style>
-      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #1f2430; }
-    </style>
-  </head>
-  <body>
-    <div id="root" data-composition-id="main" data-start="0" data-duration="${duration}" data-width="1920" data-height="1080">
-      <div id="caption-host" data-composition-id="${id}" data-composition-src="${src}" data-start="0" data-duration="${duration}" data-track-index="1" data-width="1920" data-height="1080"></div>
-    </div>
-    <script>
-      window.__timelines = window.__timelines || {};
-      const tl = gsap.timeline({ paused: true });
-      window.__timelines["main"] = tl;
-      tl.seek(0);
-    </script>
-  </body>
-</html>
-`;
 }
 
 const cfg = JSON.parse(readFileSync(path.join(ROOT, 'catalog/validation/caption-styles.json'), 'utf8'));
@@ -116,6 +91,18 @@ if (!existsSync(path.join(SANDBOX, 'hyperframes.json'))) {
 }
 mkdirSync(path.join(SANDBOX, 'renders'), { recursive: true });
 
+let backdrop = null;
+if (backdropName) {
+  const add = hf(['add', backdropName, '--json', '--no-clipboard'], SANDBOX);
+  if (add.status !== 0) {
+    console.error(`배경 블록 설치 실패 (${backdropName}):\n${tail(add.stderr || add.stdout, 15)}`);
+    process.exit(1);
+  }
+  const written = JSON.parse(add.stdout).written ?? [];
+  for (const c of assetCopies(written, SANDBOX)) { mkdirSync(path.dirname(c.to), { recursive: true }); copyFileSync(c.from, c.to); }
+  backdrop = { id: backdropName, src: compositionPath(backdropName, written, SANDBOX) ?? `compositions/${backdropName}.html` };
+}
+
 const rows = [];
 for (const name of targets) {
   const record = { name, group: 'caption', renderExit: -1 };
@@ -131,7 +118,7 @@ for (const name of targets) {
       if (errs.length) throw new Error(`SRT 오류: ${errs.map((e) => e.code).join(',')}`);
       const rel = `compositions/${name}-ko.html`;
       writeFileSync(path.join(SANDBOX, rel), injectWords(src, words, groups));
-      writeFileSync(path.join(SANDBOX, 'index.html'), hostHtml(name, rel, duration));
+      writeFileSync(path.join(SANDBOX, 'index.html'), hostHtml({ id: name, src: rel, duration, backdrop }));
       record.expected = { width: 1920, height: 1080, duration };
 
       const check = hf(['check', '--json'], SANDBOX);
@@ -140,7 +127,7 @@ for (const name of targets) {
       record.check = sum ? { exit: check.status, ...sum } : { exit: check.status, summary: 'unparsed', raw: tail(check.stdout || check.stderr, 6) };
       record.checkFull = check.stdout;
 
-      const out = path.join('renders', `${name}-ko.mp4`);
+      const out = path.join('renders', `${name}-ko${tag}.mp4`);
       let r = hf(['render', '--quality', quality, '--output', out, '--quiet'], SANDBOX);
       let attempts = 1;
       if (r.timedOut) { r = hf(['render', '--quality', quality, '--output', out, '--quiet'], SANDBOX); attempts = 2; }
@@ -158,14 +145,17 @@ for (const name of targets) {
   if (record.status === 'success' && record.visual && record.visual.verdict !== 'ok') {
     record.status = 'partial';
     record.reason = `visual: ${record.visual.verdict}`;
+  } else if (record.status === 'success' && record.check && !record.check.ok) {
+    record.status = 'partial';
+    record.reason = `check: ${record.check.errors ?? '?'} error(s) ${(record.check.codes ?? []).filter((c) => c !== 'negative_z_index').join(',')}`.trim();
   } else if (record.status === 'partial') record.reason = metaMismatches(record).join('; ') || 'no ffprobe result';
   rows.push(record);
   console.log(`${record.status.padEnd(7)} ${name} (${((record.ms ?? 0) / 1000).toFixed(1)}s) check=${record.check ? `${record.check.ok ? 'ok' : 'FAIL'} e${record.check.errors ?? '?'} w${record.check.warnings ?? '?'}` : '-'}${record.reason ? ' ' + record.reason : ''}`);
   if (record.log) console.log(record.log);
-  writeFileSync(path.join(RUN_DIR, 'captions-results.json'), JSON.stringify({ hyperframes: HF_VERSION, quality, srt: cues, rows }, null, 2));
+  writeFileSync(path.join(RUN_DIR, `captions-results${tag}.json`), JSON.stringify({ hyperframes: HF_VERSION, quality, backdrop: backdropName, srt: cues, rows }, null, 2));
 }
 
 const lines = ['| 스타일 | 결과 | check | 화면 | 원인 | 시간(초) |', '|---|---|---|---|---|---|'];
 for (const r of rows) lines.push(`| ${r.name} | ${r.status} | ${r.check ? `${r.check.ok ? 'ok' : 'FAIL'} e${r.check.errors ?? '?'} w${r.check.warnings ?? '?'} ${(r.check.codes ?? []).join(',')}` : '-'} | ${r.visual?.verdict ?? '-'} | ${r.reason ?? '-'} | ${((r.ms ?? 0) / 1000).toFixed(1)} |`);
-writeFileSync(path.join(RUN_DIR, 'captions-results.md'), lines.join('\n') + '\n');
+writeFileSync(path.join(RUN_DIR, `captions-results${tag}.md`), lines.join('\n') + '\n');
 console.log('\n' + lines.join('\n'));

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cueGroups, injectWords, readDuration } from '../scripts/lib/captions-inject.mjs';
+import { cueGroups, hostHtml, injectWords, readDuration } from '../scripts/lib/captions-inject.mjs';
 
 const words = [
   { id: 'w0', text: '가', start: 0, end: 1 },
@@ -68,4 +68,29 @@ test('readDuration: 루트 data-duration 을 읽는다', () => {
 
 test('readDuration: 없으면 오류', () => {
   assert.throws(() => readDuration('<div></div>'), /data-duration/);
+});
+
+test('hostHtml: 자막 컴포넌트를 id 가 있는 호스트 div 로 마운트한다', () => {
+  const html = hostHtml({ id: 'caption-x', src: 'compositions/caption-x-ko.html', duration: 8 });
+  assert.match(html, /id="caption-host"[^>]*data-composition-id="caption-x"[^>]*data-composition-src="compositions\/caption-x-ko.html"/);
+  assert.match(html, /data-composition-id="main"[^>]*data-duration="8"/);
+});
+
+test('hostHtml: 배경이 없으면 배경 블록 div 가 없다', () => {
+  const html = hostHtml({ id: 'caption-x', src: 'a.html', duration: 8 });
+  assert.doesNotMatch(html, /id="backdrop"/);
+});
+
+test('hostHtml: 배경 블록은 자막보다 낮은 data-track-index 로 마운트한다', () => {
+  const html = hostHtml({ id: 'caption-x', src: 'a.html', duration: 8, backdrop: { id: 'aurora', src: 'compositions/aurora.html' } });
+  const track = (re) => Number(re.exec(html)[1]);
+  const back = track(/id="backdrop"[^>]*data-track-index="(\d+)"/);
+  const cap = track(/id="caption-host"[^>]*data-track-index="(\d+)"/);
+  assert.ok(back < cap);
+  assert.match(html, /id="backdrop"[^>]*data-composition-src="compositions\/aurora.html"/);
+});
+
+test('hostHtml: 배경 블록 div 는 자막 div 보다 앞에 온다', () => {
+  const html = hostHtml({ id: 'caption-x', src: 'a.html', duration: 8, backdrop: { id: 'aurora', src: 'b.html' } });
+  assert.ok(html.indexOf('id="backdrop"') < html.indexOf('id="caption-host"'));
 });

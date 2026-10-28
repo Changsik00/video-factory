@@ -16,9 +16,9 @@
 - [x] Commit: `test(spec-01-02): add failing tests for srt parse and word split`
 
 ### 1-3. 구현 (TDD Green)
-- [ ] `scripts/lib/srt.mjs`, `catalog/validation/captions.srt`
-- [ ] `npm test` → Pass 확인
-- [ ] Commit: `feat(spec-01-02): add srt parser and word timing split`
+- [x] `scripts/lib/srt.mjs`, `catalog/validation/captions.srt`
+- [x] `npm test` → Pass 확인 (55개)
+- [x] Commit: `feat(spec-01-02): add srt parser and word timing split`
 
 ---
 

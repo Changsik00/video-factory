@@ -36,6 +36,12 @@ test('missingFromRegistry: 블록이 아닌 항목(component)은 블록으로 �
   assert.deepEqual(missingFromRegistry(['b'], items), ['b']);
 });
 
+test('missingFromRegistry: type 을 지정하면 그 타입으로 판정한다 (component)', () => {
+  const items = [{ name: 'b', type: 'hyperframes:component' }, { name: 'a', type: 'hyperframes:block' }];
+  assert.deepEqual(missingFromRegistry(['b'], items, 'hyperframes:component'), []);
+  assert.deepEqual(missingFromRegistry(['a'], items, 'hyperframes:component'), ['a']);
+});
+
 test('tail: 마지막 N줄만, ANSI 제거', () => {
   assert.equal(tail('a\nb\n\u001b[31mc\u001b[0m\nd', 2), 'c\nd');
   assert.equal(tail('', 3), '');

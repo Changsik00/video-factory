@@ -21,9 +21,9 @@ export function inferReason(stderr, { timedOut = false } = {}) {
   return 'other';
 }
 
-export function missingFromRegistry(names, items) {
-  const blocks = new Set(items.filter((i) => i.type === 'hyperframes:block').map((i) => i.name));
-  return names.filter((n) => !blocks.has(n));
+export function missingFromRegistry(names, items, type = 'hyperframes:block') {
+  const found = new Set(items.filter((i) => i.type === type).map((i) => i.name));
+  return names.filter((n) => !found.has(n));
 }
 
 // `hyperframes add --json` 의 written 목록에서 블록 본체 html 의 프로젝트 상대 경로를 찾는다.

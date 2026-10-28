@@ -25,10 +25,10 @@
 ## Task 2: 자막 렌더 러너
 
 ### 2-1. 러너 구현
-- [ ] `catalog/validation/caption-styles.json`, `scripts/render-captions.mjs` (`--dry-run` 포함)
-- [ ] `--dry-run`: SRT 검증 + 후보 스타일이 레지스트리에 있는지 확인 (네트워크 실패는 실패로 보고)
-- [ ] 스타일 1개로 조립·렌더 smoke test 후 호스트 조립 방식을 확정
-- [ ] Commit: `feat(spec-01-02): add caption render runner`
+- [x] `catalog/validation/caption-styles.json`, `scripts/render-captions.mjs` (`--dry-run` 포함)
+- [x] `--dry-run`: SRT 검증 + 후보 스타일이 레지스트리에 있는지 확인 (네트워크 실패는 실패로 보고)
+- [x] 스타일 1개로 조립·렌더 smoke test 후 호스트 조립 방식을 확정
+- [x] Commit: `feat(spec-01-02): add caption render runner`
 
 ---
 

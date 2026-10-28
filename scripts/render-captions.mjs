@@ -10,7 +10,7 @@ import path from 'node:path';
 import { cueGroups, injectWords, readDuration } from './lib/captions-inject.mjs';
 import { parseSrt, toWords, validateCues } from './lib/srt.mjs';
 import { classify, metaMismatches } from './lib/summarize.mjs';
-import { inferReason, missingFromRegistry, parseSignalstats, tail, visualVerdict } from './lib/diagnose.mjs';
+import { inferReason, missingFromRegistry, parseSignalstats, summarizeCheck, tail, visualVerdict } from './lib/diagnose.mjs';
 
 const HF_VERSION = '0.8.206';
 const REGISTRY_INDEX = 'https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry/registry.json';
@@ -64,7 +64,7 @@ function hostHtml(id, src, duration) {
   </head>
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-duration="${duration}" data-width="1920" data-height="1080">
-      <div data-composition-id="${id}" data-composition-src="${src}" data-start="0" data-duration="${duration}" data-track-index="1" data-width="1920" data-height="1080"></div>
+      <div id="caption-host" data-composition-id="${id}" data-composition-src="${src}" data-start="0" data-duration="${duration}" data-track-index="1" data-width="1920" data-height="1080"></div>
     </div>
     <script>
       window.__timelines = window.__timelines || {};
@@ -135,10 +135,9 @@ for (const name of targets) {
       record.expected = { width: 1920, height: 1080, duration };
 
       const check = hf(['check', '--json'], SANDBOX);
-      try {
-        const j = JSON.parse(check.stdout);
-        record.check = { exit: check.status, ok: j.ok, errors: j.errors ?? j.summary?.errors, warnings: j.warnings ?? j.summary?.warnings };
-      } catch { record.check = { exit: check.status, raw: tail(check.stdout || check.stderr, 6) }; }
+      let sum = null;
+      try { sum = summarizeCheck(JSON.parse(check.stdout)); } catch { /* JSON 이 아니면 요약 없음 */ }
+      record.check = sum ? { exit: check.status, ...sum } : { exit: check.status, summary: 'unparsed', raw: tail(check.stdout || check.stderr, 6) };
       record.checkFull = check.stdout;
 
       const out = path.join('renders', `${name}-ko.mp4`);
@@ -161,12 +160,12 @@ for (const name of targets) {
     record.reason = `visual: ${record.visual.verdict}`;
   } else if (record.status === 'partial') record.reason = metaMismatches(record).join('; ') || 'no ffprobe result';
   rows.push(record);
-  console.log(`${record.status.padEnd(7)} ${name} (${((record.ms ?? 0) / 1000).toFixed(1)}s) check=${JSON.stringify(record.check ?? '-')}${record.reason ? ' ' + record.reason : ''}`);
+  console.log(`${record.status.padEnd(7)} ${name} (${((record.ms ?? 0) / 1000).toFixed(1)}s) check=${record.check ? `${record.check.ok ? 'ok' : 'FAIL'} e${record.check.errors ?? '?'} w${record.check.warnings ?? '?'}` : '-'}${record.reason ? ' ' + record.reason : ''}`);
   if (record.log) console.log(record.log);
   writeFileSync(path.join(RUN_DIR, 'captions-results.json'), JSON.stringify({ hyperframes: HF_VERSION, quality, srt: cues, rows }, null, 2));
 }
 
 const lines = ['| 스타일 | 결과 | check | 화면 | 원인 | 시간(초) |', '|---|---|---|---|---|---|'];
-for (const r of rows) lines.push(`| ${r.name} | ${r.status} | ${r.check ? JSON.stringify(r.check) : '-'} | ${r.visual?.verdict ?? '-'} | ${r.reason ?? '-'} | ${((r.ms ?? 0) / 1000).toFixed(1)} |`);
+for (const r of rows) lines.push(`| ${r.name} | ${r.status} | ${r.check ? `${r.check.ok ? 'ok' : 'FAIL'} e${r.check.errors ?? '?'} w${r.check.warnings ?? '?'} ${(r.check.codes ?? []).join(',')}` : '-'} | ${r.visual?.verdict ?? '-'} | ${r.reason ?? '-'} | ${((r.ms ?? 0) / 1000).toFixed(1)} |`);
 writeFileSync(path.join(RUN_DIR, 'captions-results.md'), lines.join('\n') + '\n');
 console.log('\n' + lines.join('\n'));

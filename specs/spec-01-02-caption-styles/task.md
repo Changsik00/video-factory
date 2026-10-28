@@ -35,8 +35,8 @@
 ## Task 3: 실행 및 결과 기록
 
 ### 3-1. 5개 스타일 렌더
-- [ ] 러너 실행, `check --json` 결과와 화면 검사 확인
-- [ ] 프레임 시트 생성 (`runs/phase-01/posters/captions-sheet.png`)
+- [x] 러너 실행, `check --json` 결과와 화면 검사 확인
+- [x] 프레임 시트 생성 (`runs/phase-01/posters/captions-sheet.png`)
 - [ ] 사용자 판정 받기 (한글 표시, 단어 분배 품질)
 
 ### 3-2. 문서화

@@ -114,8 +114,8 @@ node scripts/render-captions.mjs             # 실제 렌더 (수 분)
 
 ## ✅ Definition of Done
 
-- [ ] 모든 테스트 PASS
-- [ ] 자막 컴포넌트 5개(또는 대체 포함)의 결과와 원인이 `docs/tool-findings.md`에 기록됨
-- [ ] 한글 표시와 단어 분배 품질에 대한 사용자 판정이 기록됨
-- [ ] `walkthrough.md`와 `pr_description.md` 작성 및 ship commit
+- [x] 모든 테스트 PASS
+- [x] 자막 컴포넌트 5개(또는 대체 포함)의 결과와 원인이 `docs/tool-findings.md`에 기록됨
+- [ ] 한글 표시와 단어 분배 품질에 대한 사용자 판정이 기록됨 (미수령, 이월)
+- [x] `walkthrough.md`와 `pr_description.md` 작성 및 ship commit
 - [ ] `spec-01-02-caption-styles` 브랜치 push 완료

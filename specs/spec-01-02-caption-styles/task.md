@@ -43,7 +43,7 @@
 - [x] 테스트: `hostHtml` 이 배경 블록을 자막보다 아래 레이어로 마운트 (`tests/captions-inject.test.mjs`) → Fail 확인 → 구현
 - [x] 러너 `--backdrop=<블록>`: 블록 add(에셋 복사 포함) → 호스트에 마운트 → 렌더
 - [x] 밝기가 다른 블록 3개 × 스타일 5개 렌더, 프레임 시트 생성
-- [ ] 사용자 판정 받기 (배경 위 가독성) — 대기
+- [ ] 사용자 판정 받기 (배경 위 가독성) — 미수령, 이월
 - [x] Commit: `feat(spec-01-02): render captions over block backdrops`
 
 ### 3-2. 문서화
@@ -56,13 +56,13 @@
 
 ### 🚦 Pre-Push Quality Gate
 
-- [ ] **전체 테스트 실행** → 모두 PASS
+- [x] **전체 테스트 실행** → 모두 PASS
 
 ### 📝 산출물 작성
 
-- [ ] **walkthrough.md 작성**
-- [ ] **pr_description.md 작성**
-- [ ] Commit: `docs(spec-01-02): ship walkthrough and pr description`
+- [x] **walkthrough.md 작성**
+- [x] **pr_description.md 작성**
+- [x] Commit: `docs(spec-01-02): ship walkthrough and pr description`
 
 ### 🚀 Push & PR
 

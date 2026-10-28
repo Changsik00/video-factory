@@ -11,9 +11,9 @@
 - [x] `git checkout -b spec-01-02-caption-styles` (spec 생성 시 이미 생성됨)
 
 ### 1-2. 테스트 작성 (TDD Red)
-- [ ] `tests/srt.test.mjs`: 파싱(여러 줄 자막, 쉼표 소수점, BOM, CRLF), 검증(역전, 겹침, 길이 초과, 빈 텍스트), 단어 분배(글자 수 비례, 구간 경계 일치, 단어 1개, 연속 공백)
-- [ ] 테스트 실행 → Fail 확인
-- [ ] Commit: `test(spec-01-02): add failing tests for srt parse and word split`
+- [x] `tests/srt.test.mjs`: 파싱(여러 줄 자막, 쉼표 소수점, BOM, CRLF), 검증(역전, 겹침, 길이 초과, 빈 텍스트), 단어 분배(글자 수 비례, 구간 경계 일치, 단어 1개, 연속 공백)
+- [x] 테스트 실행 → Fail 확인
+- [x] Commit: `test(spec-01-02): add failing tests for srt parse and word split`
 
 ### 1-3. 구현 (TDD Green)
 - [ ] `scripts/lib/srt.mjs`, `catalog/validation/captions.srt`

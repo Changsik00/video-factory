@@ -39,12 +39,13 @@ SRT 파서·단어 분배·검증 로직을 순수 함수로 만들고(TDD), 같
 4. 각 결과를 성공/부분/실패로 분류하고, 한글 표시(두부 여부), 화면 검사(blank/static), 단어 강조가 구간에 맞는지(프레임 확인)를 기록한다.
 5. 컴포넌트를 호스트에 붙이는 방식이 스타일마다 다른 정도를 기록한다 (자동화 가능 여부 판단 근거).
 6. `npx hyperframes check --json`을 호스트 컴포지션에 실행하고 결과를 기록한다 (스킬의 공식 검증 루프).
-7. 실패는 로그 그대로 기록한다. 모의 성공을 만들지 않는다. 결과는 `docs/tool-findings.md`에 추가한다.
+7. 자막을 이펙트 블록 배경 위에 얹은 렌더도 시험한다: 밝기가 다른 블록 3개 위에 같은 5개 스타일을 올려 가독성(밝은 배경에서 흰 글자가 묻히는지)을 프레임으로 확인하고 기록한다. (2026-10-28 사용자 승인으로 추가)
+8. 실패는 로그 그대로 기록한다. 모의 성공을 만들지 않는다. 결과는 `docs/tool-findings.md`에 추가한다.
 
 ## Out of Scope
 
 - 음성 전사, TTS (ADR-001)
-- 샘플 영상 한 편 제작, 오버레이 배경 합성, 라이선스·작성자 정리 (spec-01-03)
+- 샘플 영상 한 편 제작, 오버레이 블록(lt-bold-block 등)의 배경 합성, 라이선스·작성자 정리 (spec-01-03). 이 spec은 "블록 배경 위 자막 가독성"만 본다
 - 나머지 11개 자막 컴포넌트의 시험, 세로(portrait) 자막
 - 자막 스타일의 미적 우열 평가 (사용자 판정은 받되 기준을 세우지 않는다)
 - 영어 병기
@@ -75,11 +76,17 @@ SRT 파서·단어 분배·검증 로직을 순수 함수로 만들고(TDD), 같
 #### [NEW] `scripts/lib/srt.mjs`, `tests/srt.test.mjs`
 `parseSrt(text)`, `validateCues(cues, duration)`, `toWords(cues)`. 검증 오류는 항목별 코드로 반환.
 
+#### [NEW] `scripts/lib/captions-inject.mjs`, `tests/captions-inject.test.mjs`
+컴포넌트의 예시 단어·묶음 치환(`injectWords`, `cueGroups`), 루트 호스트 HTML 생성(`hostHtml`, 배경 블록 마운트 포함).
+
 #### [NEW] `catalog/validation/captions.srt`, `catalog/validation/caption-styles.json`
 시험 문장 SRT와 스타일 후보 목록(이름, 대체 후보).
 
 #### [NEW] `scripts/render-captions.mjs`
-스타일별 샌드박스 프로젝트 생성 → 컴포넌트 add → 호스트 조립 → `check --json` → 렌더 → ffprobe·signalstats. 결과를 `runs/phase-01/captions-results.json|md`에 기록.
+스타일별 샌드박스 프로젝트 생성 → 컴포넌트 add → 호스트 조립 → `check --json` → 렌더 → ffprobe·signalstats. 결과를 `runs/phase-01/captions-results.json|md`에 기록. `--backdrop=<블록>`으로 블록 배경 위 렌더를 지원한다.
+
+#### [MODIFY] `scripts/lib/diagnose.mjs`, `tests/diagnose.test.mjs`
+`missingFromRegistry`에 type 인자 추가(컴포넌트 판정), `summarizeCheck` 추가(`check --json` 섹션별 요약).
 
 #### [MODIFY] `docs/tool-findings.md`
 자막 컴포넌트 절 추가: 결과표, 한글 표시, 변환 품질, 붙이는 절차 난이도, 미확인.

@@ -85,12 +85,12 @@
 
 ### 🚦 Pre-Push Quality Gate
 
-- [ ] **전체 테스트 실행** → 모두 PASS
+- [x] **전체 테스트 실행** → 모두 PASS (141개)
 
 ### 📝 산출물 작성
 
-- [ ] **walkthrough.md 작성**
-- [ ] **pr_description.md 작성**
+- [x] **walkthrough.md 작성**
+- [x] **pr_description.md 작성**
 - [ ] Commit: `docs(spec-01-03): ship walkthrough and pr description`
 
 ### 🚀 Push & PR

@@ -1,5 +1,10 @@
 {
-  "note": "spec-01-02 시험용. fallbacks 는 styles 중 설치·조립이 실패했을 때 대체로 쓴다 (사유를 결과에 기록).",
-  "styles": ["caption-highlight", "caption-pill-karaoke", "caption-clip-wipe", "caption-weight-shift", "caption-glitch-rgb"],
-  "fallbacks": ["caption-neon-glow", "caption-gradient-fill", "caption-editorial-emphasis"]
+  "note": "spec-01-03: caption-style 태그 컴포넌트 16개 전체 (hyperframes@0.8.206 의 catalog --tag caption-style 기준). 레지스트리가 바뀌면 달라질 수 있다.",
+  "styles": [
+    "caption-camera-follow", "caption-clip-wipe", "caption-editorial-emphasis", "caption-emoji-pop",
+    "caption-glitch-rgb", "caption-gradient-fill", "caption-highlight", "caption-kinetic-slam",
+    "caption-matrix-decode", "caption-neon-accent", "caption-neon-glow", "caption-parallax-layers",
+    "caption-particle-burst", "caption-pill-karaoke", "caption-texture", "caption-weight-shift"
+  ],
+  "fallbacks": []
 }

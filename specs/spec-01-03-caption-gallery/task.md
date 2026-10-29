@@ -46,10 +46,10 @@
 ## Task 4: 러너 확장
 
 ### 4-1. 매트릭스 모드
-- [ ] `--all`, `--backdrops`, 조합 결과 누적·재개, 라벨·scrim 옵션
-- [ ] 2초 배경(swirl) 반복 마운트가 이음새 없이 동작하는지 smoke
-- [ ] `caption-styles.json` 16개로 확장, `--dry-run` 으로 레지스트리 확인
-- [ ] Commit: `feat(spec-01-03): add caption matrix mode`
+- [x] `--backdrops`(`--backdrop` 별칭), 조합 결과 누적·재개(`captions-matrix.json`), 라벨·`--scrim` 옵션, `--force`
+- [x] 2초 배경(swirl) smoke: **반복 마운트는 2초 이후 검은 화면(거짓 success 였음)**. 영상 이어 붙이기로 변경, 테스트·`backdropVerdict` 추가, 8초 내내 배경 확인 (이음새 여부는 눈으로 판정 필요)
+- [x] `caption-styles.json` 16개로 확장, `--dry-run` 으로 레지스트리 확인 (스타일 16, 배경 5, 80조합)
+- [x] Commit: `feat(spec-01-03): add caption matrix mode`
 
 ---
 

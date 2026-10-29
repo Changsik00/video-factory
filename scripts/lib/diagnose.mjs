@@ -93,3 +93,20 @@ export function summarizeCheck(json) {
     contrast: c?.enabled ? { checked: c.checked, passed: c.passed } : undefined,
   };
 }
+
+// 렌더 영상 전체의 평균 밝기(YAVG 평균). 값이 없으면 null.
+export function parseYavg(text) {
+  const v = [...text.matchAll(/lavfi\.signalstats\.YAVG=([\d.]+)/g)].map((m) => Number(m[1]));
+  return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+}
+
+// 배경이 중간에 사라진 렌더(예: 2초 블록이 끝난 뒤 검은 화면)를 걸러낸다.
+// 렌더 평균 밝기가 배경 측정 밝기의 절반 미만이면 의심한다. 원래 어두운 배경(60 미만)은 판정하지 않는다.
+const BACKDROP_JUDGE_MIN_YAVG = 60;
+const BACKDROP_MISSING_RATIO = 0.5;
+
+export function backdropVerdict(renderYavg, expectedYavg) {
+  if (renderYavg == null || expectedYavg == null) return 'unknown';
+  if (expectedYavg < BACKDROP_JUDGE_MIN_YAVG) return 'ok';
+  return renderYavg < expectedYavg * BACKDROP_MISSING_RATIO ? 'backdrop_missing' : 'ok';
+}

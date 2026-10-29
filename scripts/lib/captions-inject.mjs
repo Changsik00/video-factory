@@ -122,18 +122,17 @@ const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 
 // 루트 컴포지션이 자막 컴포넌트를 마운트하는 공식 배선(wiring-blocks). 배경 블록은 자막보다 아래 레이어.
 // 기본 바탕은 자막이 보이도록 어두운 단색.
-//   backdrop.duration 이 duration 보다 짧으면 이어 붙여 반복 마운트한다 (2초 셰이더 블록 등).
+//   backdrop: { id, src } 블록 마운트, 또는 { video } 영상 파일.
 //   scrim: 배경과 자막 사이의 어두운 그라데이션 막.  label: 구석의 작은 표기(모음 영상용).
 export function hostHtml({ id, src, duration, backdrop, label, scrim }) {
   const attrs = (compId, compSrc, start, dur, track) =>
     `data-composition-id="${compId}" data-composition-src="${compSrc}" data-start="${start}" data-duration="${dur}" data-track-index="${track}" data-width="1920" data-height="1080"`;
   const layers = [];
-  if (backdrop) {
-    const len = backdrop.duration > 0 && backdrop.duration < duration ? backdrop.duration : duration;
-    for (let start = 0, n = 0; start < duration; start += len, n++) {
-      const dur = Math.min(len, duration - start);
-      layers.push(`<div id="${n === 0 ? 'backdrop' : `backdrop-${n}`}" ${attrs(backdrop.id, backdrop.src, start, dur, 0)}></div>`);
-    }
+  if (backdrop?.video) {
+    // 2초짜리 셰이더 블록 등은 미리 렌더해 이어 붙인 영상 파일로 깐다 (같은 컴포지션 id 의 반복 마운트는 동작하지 않았다).
+    layers.push(`<video id="backdrop" src="${backdrop.video}" muted playsinline data-start="0" data-duration="${duration}" data-track-index="0" style="position:absolute;left:0;top:0;width:1920px;height:1080px;object-fit:cover;"></video>`);
+  } else if (backdrop) {
+    layers.push(`<div id="backdrop" ${attrs(backdrop.id, backdrop.src, 0, duration, 0)}></div>`);
   }
   if (scrim) {
     layers.push(`<div id="scrim" class="clip" data-start="0" data-duration="${duration}" data-track-index="1" style="position:absolute;left:0;bottom:0;width:1920px;height:460px;background:linear-gradient(to top,rgba(0,0,0,0.72),rgba(0,0,0,0));z-index:5;"></div>`);

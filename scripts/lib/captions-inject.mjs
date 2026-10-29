@@ -57,15 +57,31 @@ export function readDuration(html) {
   return Number(m[1]);
 }
 
+const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
 // 루트 컴포지션이 자막 컴포넌트를 마운트하는 공식 배선(wiring-blocks). 배경 블록은 자막보다 아래 레이어.
 // 기본 바탕은 자막이 보이도록 어두운 단색.
-export function hostHtml({ id, src, duration, backdrop }) {
-  const mount = (elId, compId, compSrc, track) =>
-    `<div id="${elId}" data-composition-id="${compId}" data-composition-src="${compSrc}" data-start="0" data-duration="${duration}" data-track-index="${track}" data-width="1920" data-height="1080"></div>`;
-  const layers = [
-    backdrop ? mount('backdrop', backdrop.id, backdrop.src, 0) : null,
-    mount('caption-host', id, src, 1),
-  ].filter(Boolean).map((l) => `      ${l}`).join('\n');
+//   backdrop.duration 이 duration 보다 짧으면 이어 붙여 반복 마운트한다 (2초 셰이더 블록 등).
+//   scrim: 배경과 자막 사이의 어두운 그라데이션 막.  label: 구석의 작은 표기(모음 영상용).
+export function hostHtml({ id, src, duration, backdrop, label, scrim }) {
+  const attrs = (compId, compSrc, start, dur, track) =>
+    `data-composition-id="${compId}" data-composition-src="${compSrc}" data-start="${start}" data-duration="${dur}" data-track-index="${track}" data-width="1920" data-height="1080"`;
+  const layers = [];
+  if (backdrop) {
+    const len = backdrop.duration > 0 && backdrop.duration < duration ? backdrop.duration : duration;
+    for (let start = 0, n = 0; start < duration; start += len, n++) {
+      const dur = Math.min(len, duration - start);
+      layers.push(`<div id="${n === 0 ? 'backdrop' : `backdrop-${n}`}" ${attrs(backdrop.id, backdrop.src, start, dur, 0)}></div>`);
+    }
+  }
+  if (scrim) {
+    layers.push(`<div id="scrim" class="clip" data-start="0" data-duration="${duration}" data-track-index="1" style="position:absolute;left:0;bottom:0;width:1920px;height:460px;background:linear-gradient(to top,rgba(0,0,0,0.72),rgba(0,0,0,0));z-index:5;"></div>`);
+  }
+  layers.push(`<div id="caption-host" ${attrs(id, src, 0, duration, scrim ? 2 : 1)}></div>`);
+  if (label) {
+    layers.push(`<div id="label" class="clip" data-start="0" data-duration="${duration}" data-track-index="9" style="position:absolute;left:32px;top:24px;font:600 22px sans-serif;color:#fff;background:rgba(0,0,0,0.55);padding:6px 12px;border-radius:6px;z-index:50;">${esc(label)}</div>`);
+  }
+  const body = layers.map((l) => `      ${l}`).join('\n');
   return `<!doctype html>
 <html lang="ko">
   <head>
@@ -78,7 +94,7 @@ export function hostHtml({ id, src, duration, backdrop }) {
   </head>
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-duration="${duration}" data-width="1920" data-height="1080">
-${layers}
+${body}
     </div>
     <script>
       window.__timelines = window.__timelines || {};

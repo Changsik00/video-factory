@@ -16,9 +16,9 @@
 - [x] Commit: `test(spec-01-03): add failing tests for label, scrim and backdrop repeat`
 
 ### 1-3. 구현 (TDD Green)
-- [ ] `scripts/lib/captions-inject.mjs`
-- [ ] `npm test` → Pass 확인 (기존 75개 유지)
-- [ ] Commit: `feat(spec-01-03): add label, scrim and backdrop repeat to host`
+- [x] `scripts/lib/captions-inject.mjs`
+- [x] `npm test` → Pass 확인 (84개, 기존 75개 유지)
+- [x] Commit: `feat(spec-01-03): add label, scrim and backdrop repeat to host`
 
 ---
 

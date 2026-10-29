@@ -57,11 +57,12 @@
 
 ### 5-1. smoke → 전체
 - [x] 구조 4종 smoke 후 전체 매트릭스 1차 실행 (80조합, 약 70분). **결과 무효**: check 가 다른 조합 파일까지 린트해 72개가 partial 로 오염, 자막 스크립트가 터진 렌더가 exit 0 으로 성공 처리됨(gradient-fill 등), 실패 5건은 원인이 gpu 로 오분류. 원인 수정 후 `--force` 로 전체 재실행 (1차 결과는 `captions-matrix.v1-contaminated.json` 로 보존)
-- [ ] 전체 재실행 (백그라운드)
-- [ ] 결과 JSON 점검, 프레임 시트 생성
+- [x] 전체 재실행 (2026-10-29): 80조합 중 **75 success**, 실패 5건은 전부 `caption-emoji-pop` (navigation_timeout 3, gpu 1, partial 1). 마지막 12개는 PC 부하를 위해 4개씩 나눠 재개. 옛 행 잔존 없음
+- [x] `emoji-pop` 1회 추가 진단 (draft, 240초): 같은 `page.goto` 에서 Navigation timeout 재현. 화질·부하와 무관하게 페이지 로드 단계에서 막힘. 다른 15개도 같은 Google Fonts 를 쓰고 curl 응답은 0.2초라 외부 폰트·네트워크 가설은 근거 약함. **원인 미해결, 재시도 안 함**, 이 환경에서 렌더 불가로 기록 (별도 spec 후보)
+- [x] 결과 JSON 점검, 프레임 시트 생성 (`runs/phase-01/reel/caption-gallery-sheet.png`, 30클립 242초 1920x1080 h264 ffprobe 통과)
 
 ### 5-2. scrim 시험
-- [ ] 밝은 배경에서 묻힌 스타일에 scrim 적용, 전후 프레임 비교
+- [x] 밝은 배경에서 묻힌 8개 조합에 scrim 적용, 3.8초 프레임으로 전후 비교 (8/8 렌더 success, check ok). 개선: clip-wipe·gradient-fill(data-chart, mk-background)·weight-shift(두 배경) 뚜렷, particle-burst·neon-glow 소폭. **texture(mk-background)는 효과 없음**: scrim 이 화면 아래쪽에만 깔려 중앙에 뜨는 자막을 못 덮는다. weight-shift(data-chart)는 scrim 후에도 글자가 막대와 겹침. 영상 전체 재생 확인은 안 함
 
 ---
 
@@ -70,12 +71,12 @@
 ### 6-1. TDD
 - [x] `tests/reel.test.mjs`: 대표 조합 선택 로직 (스타일당 N개, 실패·partial·scrim 제외, 배경 돌려쓰기, exclude, missing) → Fail 확인 후 구현 (126개)
 - [x] `scripts/build-reel.mjs` 작성 (`--dry-run` 으로 일부 결과에서 동작 확인)
-- [ ] 매트릭스 완료 후 모음 영상 생성, `ffprobe` 검사, 프레임 시트
-- [ ] 사용자 판정 받기
-- [ ] Commit: `feat(spec-01-03): build caption gallery reel`
+- [x] 매트릭스 완료 후 모음 영상 생성 (읽히지 않는 조합·`camera-follow`/`parallax-layers`/`texture`/`emoji-pop` 제외, 24클립 192초), `ffprobe` 검사 통과, 프레임 시트 확인
+- [ ] 사용자 판정 받기 (**미수령**. 사용자 지시로 판정 전에 정리·PR 진행, 문서에 판정 미수령으로 기록)
+- [x] Commit: `feat(spec-01-03): build caption gallery reel` (러너·테스트는 앞선 커밋 `7a2c967` 에 포함, 이 단계 산출물은 git 제외)
 
 ### 6-2. 문서화
-- [ ] `docs/tool-findings.md` 갤러리 절 작성
+- [x] `docs/tool-findings.md` 갤러리 절 작성
 - [ ] Commit: `docs(spec-01-03): record caption gallery findings`
 
 ---

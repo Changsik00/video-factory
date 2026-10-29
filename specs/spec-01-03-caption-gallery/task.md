@@ -67,8 +67,9 @@
 ## Task 6: 모음 영상
 
 ### 6-1. TDD
-- [ ] `tests/reel.test.mjs`: 대표 조합 선택 로직 (스타일당 N개, 실패·partial 제외, 배경 다양성)
-- [ ] `scripts/build-reel.mjs`, 모음 영상 생성, `ffprobe` 검사, 프레임 시트
+- [x] `tests/reel.test.mjs`: 대표 조합 선택 로직 (스타일당 N개, 실패·partial·scrim 제외, 배경 돌려쓰기, exclude, missing) → Fail 확인 후 구현 (126개)
+- [x] `scripts/build-reel.mjs` 작성 (`--dry-run` 으로 일부 결과에서 동작 확인)
+- [ ] 매트릭스 완료 후 모음 영상 생성, `ffprobe` 검사, 프레임 시트
 - [ ] 사용자 판정 받기
 - [ ] Commit: `feat(spec-01-03): build caption gallery reel`
 

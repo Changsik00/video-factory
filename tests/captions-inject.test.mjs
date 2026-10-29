@@ -228,3 +228,36 @@ test('hostHtml: video 배경도 자막보다 앞 순서이고 낮은 track 이�
   assert.ok(html.indexOf('id="backdrop"') < html.indexOf('id="scrim"') && html.indexOf('id="scrim"') < html.indexOf('id="caption-host"'));
   assert.match(html, /<video id="backdrop"[^>]*data-track-index="0"/);
 });
+
+// --- spec-01-03: 하드코딩된 묶음(GROUPS)과 키워드(KEYWORDS) ---
+const GROUPS_HTML = `var WORDS = [
+  { text: "a", start: 0, end: 1 },
+];
+var GROUPS = [
+  { wordStart: 0, wordEnd: 3, start: 0.0, end: 1.05 },
+  { wordStart: 4, wordEnd: 7, start: 1.1, end: 2.05 },
+];
+var SIRI_GRAD = "x";`;
+
+test('injectCaptions: 객체형 GROUPS(wordStart/wordEnd/start/end)를 구간으로 치환한다', () => {
+  const out = injectCaptions(GROUPS_HTML, cues2);
+  assert.match(out, /\{ wordStart: 0, wordEnd: 2, start: 0, end: 2 \}/);
+  assert.match(out, /\{ wordStart: 3, wordEnd: 3, start: 3, end: 5 \}/);
+  assert.match(out, /var SIRI_GRAD = "x";/);
+  assert.doesNotMatch(out, /wordEnd: 7/);
+});
+
+test('injectCaptions: 숫자 KEYWORDS 집합을 강조 단어 인덱스로 치환한다', () => {
+  const html = 'var WORDS = [\n { text: "a", start: 0, end: 1 },\n];\nvar KEYWORDS = new Set([8, 12, 15, 24, 27]); // x';
+  assert.match(injectCaptions(html, cues2), /var KEYWORDS = new Set\(\[2, 3, 5\]\);/);
+});
+
+test('injectCaptions: 문자열 KEYWORDS 집합은 강조 단어(소문자)로 치환한다', () => {
+  const html = 'var TRANSCRIPT = [\n { text: "a", start: 0, end: 1 },\n];\nvar KEYWORDS = new Set(["hyperframes", "html"]);';
+  assert.match(injectCaptions(html, cues2), /var KEYWORDS = new Set\(\["보여드립니다", "안녕", "나나"\]\);/);
+});
+
+test('injectCaptions: GROUPS·KEYWORDS 가 없는 컴포넌트는 그대로 둔다', () => {
+  const out = injectCaptions(WORDS_HTML, cues2);
+  assert.doesNotMatch(out, /KEYWORDS|wordStart/);
+});

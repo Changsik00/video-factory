@@ -120,7 +120,7 @@ test('assetCopies: 이미 루트 assets 이거나 assets 폴더가 없으면 빈
   assert.deepEqual(assetCopies(['/p/assets/x.png'], '/p'), []);
 });
 
-import { backdropVerdict, parseYavg, summarizeCheck } from '../scripts/lib/diagnose.mjs';
+import { backdropVerdict, hasScriptError, parseYavg, renderWarningCodes, summarizeCheck } from '../scripts/lib/diagnose.mjs';
 
 const section = (e = 0, w = 0, extra = {}) => ({ ok: e === 0, errorCount: e, warningCount: w, infoCount: 0, ...extra });
 const CHECK = {
@@ -185,4 +185,76 @@ test('backdropVerdict: 원래 어두운 배경(60 미만)은 판정하지 않는
 test('backdropVerdict: 값을 모르면 unknown', () => {
   assert.equal(backdropVerdict(null, 139), 'unknown');
   assert.equal(backdropVerdict(100, undefined), 'unknown');
+});
+
+// --- 원인 분류 보강: 정상 로그의 "WebGL renderer" 문구를 gpu 로 오분류하던 문제 ---
+const INFO_GPU_LINE = '[hyperframes] browserGpuMode probe → hardware (WebGL renderer vendor="Google Inc. (Intel)" renderer="ANGLE (Intel, ANGLE Metal Renderer)")';
+
+test('inferReason: 정상 로그의 WebGL renderer 정보 줄만으로는 gpu 가 아니다', () => {
+  assert.equal(inferReason(INFO_GPU_LINE), 'other');
+});
+
+test('inferReason: Navigation timeout -> navigation_timeout (gpu 정보 줄이 같이 있어도)', () => {
+  assert.equal(inferReason(`${INFO_GPU_LINE}\n✗  Render failed\n   Navigation timeout of 60000 ms exceeded`), 'navigation_timeout');
+});
+
+test('inferReason: 컴포지션 스크립트 오류 -> script_error', () => {
+  assert.equal(inferReason('- sub_timeline_script_failure: A composition script threw before its timeline registered'), 'script_error');
+  assert.equal(inferReason('"warningCodes":["script_error_isolated"]'), 'script_error');
+});
+
+test('renderWarningCodes: 렌더 출력에서 warningCodes 를 읽는다', () => {
+  assert.deepEqual(renderWarningCodes('x {"renderJobId":"a","warningCodes":["script_error_isolated","foo"],"warningReasons":[]} y'), ['script_error_isolated', 'foo']);
+});
+
+test('renderWarningCodes: 없으면 빈 배열', () => {
+  assert.deepEqual(renderWarningCodes('all good'), []);
+  assert.deepEqual(renderWarningCodes(undefined), []);
+});
+
+test('hasScriptError: 스크립트 오류 계열 코드가 있으면 true', () => {
+  assert.equal(hasScriptError(['script_error_isolated']), true);
+  assert.equal(hasScriptError(['x', 'sub_timeline_script_failure']), true);
+  assert.equal(hasScriptError(['font_fallback']), false);
+  assert.equal(hasScriptError([]), false);
+});
+
+// --- check 결과를 이번 조합의 파일로 한정해 집계 ---
+const f = (code, severity, file) => ({ code, severity, sourceFile: file ? `/x/compositions/${file}` : undefined });
+const SCOPED = {
+  ok: false,
+  lint: { errorCount: 1, warningCount: 3, findings: [f('font_family_without_font_face', 'error', 'caption-emoji-pop-ko.html'), f('negative_z_index', 'warning', 'caption-highlight-ko.html'), f('composition_file_too_large', 'warning', 'caption-camera-follow-ko.html'), f('x', 'warning', 'index.html')] },
+  runtime: { errorCount: 0, warningCount: 0 },
+  layout: { errorCount: 0, warningCount: 0 },
+  contrast: { errorCount: 2, warningCount: 0, enabled: true, checked: 5, passed: 3, findings: [f('contrast_aa_failure', 'error', 'spain-map.html'), f('contrast_aa_failure', 'error', 'caption-highlight-ko.html')] },
+};
+const SCOPE = { own: ['caption-highlight-ko.html', 'index.html'], backdrop: 'spain-map.html' };
+
+test('summarizeCheck(scope): 이번 조합의 파일에서 나온 것만 오류·경고로 센다', () => {
+  const s = summarizeCheck(SCOPED, SCOPE);
+  assert.equal(s.errors, 1); // highlight 의 contrast 오류만
+  assert.equal(s.warnings, 2); // highlight 의 negative_z_index + index.html
+  assert.equal(s.ok, false);
+});
+
+test('summarizeCheck(scope): 배경 파일의 결과는 따로 센다', () => {
+  assert.deepEqual(summarizeCheck(SCOPED, SCOPE).backdrop, { errors: 1, warnings: 0 });
+});
+
+test('summarizeCheck(scope): 무관한 파일의 결과는 foreign 으로만 세고 무시한다', () => {
+  const s = summarizeCheck(SCOPED, SCOPE);
+  assert.equal(s.foreign, 2); // emoji-pop, camera-follow
+  assert.deepEqual(s.codes.sort(), ['contrast_aa_failure', 'negative_z_index', 'x']);
+});
+
+test('summarizeCheck(scope): 내 파일에 문제가 없으면 ok (다른 파일 오류가 있어도)', () => {
+  const only = { ...SCOPED, lint: { ...SCOPED.lint, findings: [f('font_family_without_font_face', 'error', 'caption-emoji-pop-ko.html')] }, contrast: { ...SCOPED.contrast, findings: [] } };
+  assert.equal(summarizeCheck(only, SCOPE).ok, true);
+});
+
+test('summarizeCheck(scope): sourceFile 이 없는 결과는 내 것으로 센다 (보수적)', () => {
+  const unk = { ...SCOPED, lint: { ...SCOPED.lint, findings: [f('mystery', 'error', null)] }, contrast: { ...SCOPED.contrast, findings: [] } };
+  const s = summarizeCheck(unk, SCOPE);
+  assert.equal(s.errors, 1);
+  assert.equal(s.ok, false);
 });

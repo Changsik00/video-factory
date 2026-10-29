@@ -11,9 +11,9 @@
 - [x] `git checkout -b spec-01-03-caption-gallery` (spec 생성 전에 이미 생성됨)
 
 ### 1-2. 테스트 작성 (TDD Red)
-- [ ] `tests/captions-inject.test.mjs`: 라벨 div 존재/이스케이프, scrim 이 배경과 자막 사이 레이어, 2초 배경을 8초로 반복 마운트(시작 시각 0,2,4,6), 옵션 없으면 기존 출력과 동일
-- [ ] 테스트 실행 → Fail 확인
-- [ ] Commit: `test(spec-01-03): add failing tests for label, scrim and backdrop repeat`
+- [x] `tests/captions-inject.test.mjs`: 라벨 div 존재/이스케이프, scrim 이 배경과 자막 사이 레이어, 2초 배경을 8초로 반복 마운트(시작 시각 0,2,4,6), 옵션 없으면 기존 출력과 동일
+- [x] 테스트 실행 → Fail 확인
+- [x] Commit: `test(spec-01-03): add failing tests for label, scrim and backdrop repeat`
 
 ### 1-3. 구현 (TDD Green)
 - [ ] `scripts/lib/captions-inject.mjs`

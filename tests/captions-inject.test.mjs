@@ -94,3 +94,60 @@ test('hostHtml: 배경 블록 div 는 자막 div 보다 앞에 온다', () => {
   const html = hostHtml({ id: 'caption-x', src: 'a.html', duration: 8, backdrop: { id: 'aurora', src: 'b.html' } });
   assert.ok(html.indexOf('id="backdrop"') < html.indexOf('id="caption-host"'));
 });
+
+// --- spec-01-03: 라벨, scrim, 배경 반복 ---
+const base = { id: 'caption-x', src: 'compositions/caption-x-ko.html', duration: 8 };
+
+test('hostHtml: 옵션이 없으면 라벨·scrim 이 없고 자막 호스트는 track 1', () => {
+  const html = hostHtml(base);
+  assert.doesNotMatch(html, /id="label"|id="scrim"/);
+  assert.match(html, /id="caption-host"[^>]*data-track-index="1"/);
+});
+
+test('hostHtml: label 은 id="label" 로 들어가고 HTML 특수문자를 이스케이프한다', () => {
+  const html = hostHtml({ ...base, label: 'a<b> & "c"' });
+  assert.match(html, /id="label"[^>]*class="clip"|class="clip"[^>]*id="label"/);
+  assert.match(html, />a&lt;b&gt; &amp; &quot;c&quot;</);
+  assert.doesNotMatch(html, />a<b>/);
+});
+
+test('hostHtml: label 은 자막 호스트보다 뒤(위 레이어)에 온다', () => {
+  const html = hostHtml({ ...base, label: 'x', backdrop: { id: 'aurora', src: 'b.html' } });
+  assert.ok(html.indexOf('id="label"') > html.indexOf('id="caption-host"'));
+});
+
+test('hostHtml: scrim 은 배경과 자막 호스트 사이에 온다', () => {
+  const html = hostHtml({ ...base, scrim: true, backdrop: { id: 'aurora', src: 'b.html' } });
+  const i = (s) => html.indexOf(s);
+  assert.ok(i('id="backdrop"') < i('id="scrim"') && i('id="scrim"') < i('id="caption-host"'));
+  assert.match(html, /id="scrim"[^>]*class="clip"|class="clip"[^>]*id="scrim"/);
+});
+
+test('hostHtml: scrim 이 있으면 자막 호스트는 scrim 보다 높은 track', () => {
+  const html = hostHtml({ ...base, scrim: true, backdrop: { id: 'aurora', src: 'b.html' } });
+  const track = (id) => Number(new RegExp(`id="${id}"[^>]*data-track-index="(\\d+)"`).exec(html)[1]);
+  assert.ok(track('backdrop') < track('scrim') && track('scrim') < track('caption-host'));
+});
+
+test('hostHtml: 배경 길이가 짧으면 반복 마운트한다 (2초 → 8초는 시작 0,2,4,6)', () => {
+  const html = hostHtml({ ...base, backdrop: { id: 'aurora', src: 'compositions/aurora.html', duration: 2 } });
+  const starts = [...html.matchAll(/data-composition-src="compositions\/aurora.html"[^>]*data-start="([\d.]+)"/g)].map((m) => Number(m[1]));
+  assert.deepEqual(starts, [0, 2, 4, 6]);
+});
+
+test('hostHtml: 반복의 마지막 조각은 남은 길이만큼만 마운트한다 (3초 → 8초)', () => {
+  const html = hostHtml({ ...base, backdrop: { id: 'x', src: 'b.html', duration: 3 } });
+  const durs = [...html.matchAll(/data-composition-src="b.html"[^>]*data-duration="([\d.]+)"/g)].map((m) => Number(m[1]));
+  assert.deepEqual(durs, [3, 3, 2]);
+});
+
+test('hostHtml: 배경이 충분히 길면 한 번만 마운트한다', () => {
+  const html = hostHtml({ ...base, backdrop: { id: 'x', src: 'b.html', duration: 12 } });
+  assert.equal([...html.matchAll(/data-composition-src="b.html"/g)].length, 1);
+  assert.match(html, /id="backdrop"[^>]*data-duration="8"/);
+});
+
+test('hostHtml: duration 을 모르는 배경은 한 번만 마운트한다 (기존 동작)', () => {
+  const html = hostHtml({ ...base, backdrop: { id: 'x', src: 'b.html' } });
+  assert.equal([...html.matchAll(/data-composition-src="b.html"/g)].length, 1);
+});

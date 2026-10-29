@@ -8,7 +8,7 @@
 ## 📦 진행 중 Phase
 
 <!-- sdd:active:start -->
-- **phase-01** — tool-validation — 2 spec — 다음: spec-01-02-caption-styles
+- **phase-01** — tool-validation — 3 spec — 다음: spec-01-03-caption-gallery
 <!-- sdd:active:end -->
 
 ## 📥 spec-x 대기

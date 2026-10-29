@@ -28,7 +28,8 @@
 - [x] `editorial-emphasis`, `parallax-layers` 의 `W`, `BLOCKS` 데이터 모양 확인: `W` 는 `WORDS` 와 같은 모양, `BLOCKS` 는 단어 인덱스 배치(editorial: `{line1,line2}` + 타입 n/i/e, parallax: `{behind,front}`). **강조 단어를 입력으로 받는다.** SRT 에 강조 정보가 없어 임시 규칙(구간에서 가장 긴 단어 = 강조)으로 치환한다. 치환 가능
 
 ### 2-2. 테스트 → 구현
-- [x] 테스트 작성 → Fail (커밋) → 구현 → Pass
+- [x] 테스트 작성 → Fail (커밋) → 구현 → Pass (97개). 설치된 16개 컴포넌트 전부 치환 성공 (렌더는 Task 5)
+- [x] Commit: `feat(spec-01-03): support W and BLOCKS caption structure`
 - [ ] Commit: `test(spec-01-03): ...` / `feat(spec-01-03): support W and BLOCKS caption structure`
 
 ---

@@ -1,3 +1,5 @@
+import { toWords } from './srt.mjs';
+
 // 레지스트리 자막 컴포넌트(독립 HTML)의 예시 단어·묶음을 우리 데이터로 치환한다.
 // 컴포넌트는 `var WORDS = [...]` 또는 `var TRANSCRIPT = [...]` 에 {text,start,end} 를 갖는다.
 // 일부는 `var RAW_GROUPS = [[첫,끝], ...]` 리터럴로 묶음을 직접 지정한다.
@@ -38,8 +40,8 @@ function findLiteral(html, name) {
 const q = (s) => JSON.stringify(s); // 따옴표·역슬래시 이스케이프
 
 export function injectWords(html, words, groups) {
-  const target = ['WORDS', 'TRANSCRIPT'].find((n) => findLiteral(html, n));
-  if (!target) throw new Error('컴포넌트에서 단어 배열(var WORDS / var TRANSCRIPT)을 찾지 못했습니다');
+  const target = ['WORDS', 'TRANSCRIPT', 'W'].find((n) => findLiteral(html, n));
+  if (!target) throw new Error('컴포넌트에서 단어 배열(var WORDS / var TRANSCRIPT / var W)을 찾지 못했습니다');
   const body = words.map((w) => `    { text: ${q(w.text)}, start: ${w.start}, end: ${w.end} },`).join('\n');
   const lit = findLiteral(html, target);
   let out = `${html.slice(0, lit.start)}var ${target} = [\n${body}\n  ];${html.slice(lit.end)}`;
@@ -55,6 +57,65 @@ export function readDuration(html) {
   const m = /data-composition-id="[^"]*"[^>]*?data-duration="([\d.]+)"/s.exec(html) ?? /data-duration="([\d.]+)"/.exec(html);
   if (!m) throw new Error('컴포넌트에서 data-duration 을 찾지 못했습니다');
   return Number(m[1]);
+}
+
+// --- W/BLOCKS 구조 (editorial-emphasis, parallax-layers) ---
+// 이 컴포넌트들은 강조할 단어를 BLOCKS 에 직접 지정한다. SRT 에는 강조 정보가 없으므로
+// 임시 규칙: 구간에서 가장 긴 단어(글자 수, 동률이면 앞쪽)를 강조한다.
+const wordsOf = (cue) => cue.text.split(/\s+/).filter(Boolean);
+
+export function emphasisIndexes(cues) {
+  let next = 0;
+  return cues.map((c) => {
+    const ws = wordsOf(c);
+    let best = 0;
+    ws.forEach((w, i) => { if ([...w].length > [...ws[best]].length) best = i; });
+    const idx = next + best;
+    next += ws.length;
+    return idx;
+  });
+}
+
+export function editorialBlocks(cues) {
+  const emph = emphasisIndexes(cues);
+  let next = 0;
+  return cues.map((c, ci) => {
+    const n = wordsOf(c).length;
+    const items = Array.from({ length: n }, (_, i) => [next + i, next + i === emph[ci] ? 'e' : 'n']);
+    next += n;
+    const cut = Math.ceil(n / 2);
+    return { line1: items.slice(0, cut), line2: items.length > cut ? items.slice(cut) : null };
+  });
+}
+
+export function parallaxBlocks(cues) {
+  const emph = emphasisIndexes(cues);
+  let next = 0;
+  return cues.map((c, ci) => {
+    const n = wordsOf(c).length;
+    const front = Array.from({ length: n }, (_, i) => next + i).filter((i) => i !== emph[ci]).map((i) => [i]);
+    next += n;
+    return { behind: [[emph[ci]]], front: front.length ? front : null };
+  });
+}
+
+export function injectBlocks(html, blocks) {
+  const lit = findLiteral(html, 'BLOCKS');
+  if (!lit) throw new Error('컴포넌트에서 BLOCKS 배열(var BLOCKS)을 찾지 못했습니다');
+  const fmt = (b) => JSON.stringify(b).replace(/":/g, '": ').replace(/,"/g, ', "').replace(/\],\[/g, '], [').replace(/^\{/, '{ ').replace(/\}$/, ' }');
+  const body = blocks.map((b) => `    ${fmt(b)},`).join('\n');
+  return `${html.slice(0, lit.start)}var BLOCKS = [\n${body}\n  ];${html.slice(lit.end)}`;
+}
+
+// 컴포넌트 구조를 보고 알맞은 치환을 적용한다. 모르는 구조는 오류 (모의 성공 금지).
+export function injectCaptions(html, cues) {
+  const out = injectWords(html, toWords(cues), cueGroups(cues));
+  const lit = findLiteral(out, 'BLOCKS');
+  if (!lit) return out;
+  const current = out.slice(lit.start, lit.end);
+  if (/\bline1\b/.test(current)) return injectBlocks(out, editorialBlocks(cues));
+  if (/\bbehind\b/.test(current)) return injectBlocks(out, parallaxBlocks(cues));
+  throw new Error('BLOCKS 의 모양(line1/line2 또는 behind/front)을 알 수 없습니다');
 }
 
 const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');

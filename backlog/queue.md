@@ -26,6 +26,7 @@
 - [ ] 아이디어: sdd stale detection 자동화
 - [ ] 보류: spec-05-02 (dependency 해소 후 재검토)
 -->
+- [ ] 아이디어: 하나의 대본에서 HTML·PDF·MP4 (ADR-003/004, `docs/plan/multi-format-presentation-plan.md`) — phase-01 회고 후 phase-02 시험 후보
 
 ## 📋 대기 Phase
 

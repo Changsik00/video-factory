@@ -8,8 +8,12 @@ export function tail(text, lines) {
   return all.slice(-lines).join('\n');
 }
 
+// 순서가 중요하다: 구체적인 원인을 먼저 본다. 정상 로그에도 "WebGL renderer ..." 정보 줄이 나오므로
+// gpu 는 실제 실패 문구(어댑터 없음, 컨텍스트 생성 실패 등)에만 반응한다.
 const RULES = [
-  ['gpu', /webgpu|navigator\.gpu|gpu adapter|webgl|gpu process|swiftshader/i],
+  ['navigation_timeout', /Navigation timeout/i],
+  ['script_error', /sub_timeline_script_failure|script_error_isolated/i],
+  ['gpu', /No WebGPU adapter|navigator\.gpu (is )?undefined|gpu adapter|WebGL context (creation )?(failed|lost)|gpu process|swiftshader/i],
   ['network', /ENOTFOUND|ECONNRESET|ETIMEDOUT|EAI_AGAIN|fetch failed|network/i],
   ['font', /\bfont\b/i],
 ];
@@ -67,29 +71,70 @@ export function assetCopies(written, projectDir) {
   return out;
 }
 
-// `hyperframes check --json` 결과를 섹션 합계로 요약한다. 형태를 모르면 null (통과로 간주하지 않는다).
+// `hyperframes check --json` 결과를 요약한다. 형태를 모르면 null (통과로 간주하지 않는다).
+// check 는 샌드박스 프로젝트 전체를 린트하므로 이전 조합의 파일 결과가 섞인다. scope 를 주면
+//   own      이번 조합의 자막 파일·index.html (sourceFile 이 없는 결과도 보수적으로 여기에 센다)
+//   backdrop 배경 블록 파일: 따로 센다
+//   그 밖     foreign 개수로만 세고 무시한다.
+// scope 가 없으면 섹션 합계(기존 동작).
 const CHECK_SECTIONS = ['lint', 'runtime', 'layout', 'motion', 'contrast'];
 
-export function summarizeCheck(json) {
+export function summarizeCheck(json, scope) {
   if (!json || typeof json !== 'object' || !CHECK_SECTIONS.some((k) => json[k])) return null;
-  let errors = 0;
-  let warnings = 0;
-  const disabled = [];
-  for (const k of CHECK_SECTIONS) {
-    const s = json[k];
-    if (!s) continue;
-    errors += s.errorCount ?? 0;
-    warnings += s.warningCount ?? 0;
-    if (s.enabled === false) disabled.push(k);
-  }
-  const codes = [...new Set((json.lint?.findings ?? []).map((f) => f.code))];
+  const disabled = CHECK_SECTIONS.filter((k) => json[k]?.enabled === false);
   const c = json.contrast;
-  return {
-    ok: json.ok === true,
-    errors,
-    warnings,
-    codes,
-    disabled,
-    contrast: c?.enabled ? { checked: c.checked, passed: c.passed } : undefined,
-  };
+  const contrast = c?.enabled ? { checked: c.checked, passed: c.passed } : undefined;
+  if (!scope) {
+    let errors = 0;
+    let warnings = 0;
+    for (const k of CHECK_SECTIONS) {
+      errors += json[k]?.errorCount ?? 0;
+      warnings += json[k]?.warningCount ?? 0;
+    }
+    const codes = [...new Set((json.lint?.findings ?? []).map((f) => f.code))];
+    return { ok: json.ok === true, errors, warnings, codes, disabled, contrast };
+  }
+  const own = new Set(scope.own ?? []);
+  const own$ = { errors: 0, warnings: 0, codes: new Set() };
+  const back = { errors: 0, warnings: 0 };
+  let foreign = 0;
+  for (const k of CHECK_SECTIONS) {
+    for (const f of json[k]?.findings ?? json[k]?.issues ?? []) {
+      const file = f.sourceFile ? path.basename(f.sourceFile) : null;
+      const bucket = file === null || own.has(file) ? own$ : file === scope.backdrop ? back : null;
+      if (!bucket) { foreign += 1; continue; }
+      if (f.severity === 'error') bucket.errors += 1;
+      else if (f.severity === 'warning') bucket.warnings += 1;
+      if (bucket === own$) own$.codes.add(f.code);
+    }
+  }
+  return { ok: own$.errors === 0, errors: own$.errors, warnings: own$.warnings, codes: [...own$.codes], backdrop: back, foreign, disabled, contrast };
+}
+
+// 렌더 출력에서 `"warningCodes":[...]` 를 모은다. exit 0 이어도 스크립트 오류가 격리된 렌더를 걸러내기 위함.
+export function renderWarningCodes(text) {
+  const out = new Set();
+  for (const m of (text ?? '').matchAll(/"warningCodes":\[([^\]]*)\]/g)) {
+    for (const c of m[1].matchAll(/"([^"]+)"/g)) out.add(c[1]);
+  }
+  return [...out];
+}
+
+export const hasScriptError = (codes) => codes.some((c) => c === 'script_error_isolated' || c === 'sub_timeline_script_failure');
+
+// 렌더 영상 전체의 평균 밝기(YAVG 평균). 값이 없으면 null.
+export function parseYavg(text) {
+  const v = [...text.matchAll(/lavfi\.signalstats\.YAVG=([\d.]+)/g)].map((m) => Number(m[1]));
+  return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+}
+
+// 배경이 중간에 사라진 렌더(예: 2초 블록이 끝난 뒤 검은 화면)를 걸러낸다.
+// 렌더 평균 밝기가 배경 측정 밝기의 절반 미만이면 의심한다. 원래 어두운 배경(60 미만)은 판정하지 않는다.
+const BACKDROP_JUDGE_MIN_YAVG = 60;
+const BACKDROP_MISSING_RATIO = 0.5;
+
+export function backdropVerdict(renderYavg, expectedYavg) {
+  if (renderYavg == null || expectedYavg == null) return 'unknown';
+  if (expectedYavg < BACKDROP_JUDGE_MIN_YAVG) return 'ok';
+  return renderYavg < expectedYavg * BACKDROP_MISSING_RATIO ? 'backdrop_missing' : 'ok';
 }

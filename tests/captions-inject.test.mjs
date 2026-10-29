@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cueGroups, hostHtml, injectWords, readDuration } from '../scripts/lib/captions-inject.mjs';
+import { cueGroups, editorialBlocks, emphasisIndexes, hostHtml, injectBlocks, injectCaptions, injectWords, parallaxBlocks, readDuration } from '../scripts/lib/captions-inject.mjs';
 
 const words = [
   { id: 'w0', text: '가', start: 0, end: 1 },
@@ -93,4 +93,171 @@ test('hostHtml: 배경 블록은 자막보다 낮은 data-track-index 로 마운
 test('hostHtml: 배경 블록 div 는 자막 div 보다 앞에 온다', () => {
   const html = hostHtml({ id: 'caption-x', src: 'a.html', duration: 8, backdrop: { id: 'aurora', src: 'b.html' } });
   assert.ok(html.indexOf('id="backdrop"') < html.indexOf('id="caption-host"'));
+});
+
+// --- spec-01-03: 라벨, scrim, 배경 반복 ---
+const base = { id: 'caption-x', src: 'compositions/caption-x-ko.html', duration: 8 };
+
+test('hostHtml: 옵션이 없으면 라벨·scrim 이 없고 자막 호스트는 track 1', () => {
+  const html = hostHtml(base);
+  assert.doesNotMatch(html, /id="label"|id="scrim"/);
+  assert.match(html, /id="caption-host"[^>]*data-track-index="1"/);
+});
+
+test('hostHtml: label 은 id="label" 로 들어가고 HTML 특수문자를 이스케이프한다', () => {
+  const html = hostHtml({ ...base, label: 'a<b> & "c"' });
+  assert.match(html, /id="label"[^>]*class="clip"|class="clip"[^>]*id="label"/);
+  assert.match(html, />a&lt;b&gt; &amp; &quot;c&quot;</);
+  assert.doesNotMatch(html, />a<b>/);
+});
+
+test('hostHtml: label 은 자막 호스트보다 뒤(위 레이어)에 온다', () => {
+  const html = hostHtml({ ...base, label: 'x', backdrop: { id: 'aurora', src: 'b.html' } });
+  assert.ok(html.indexOf('id="label"') > html.indexOf('id="caption-host"'));
+});
+
+test('hostHtml: scrim 은 배경과 자막 호스트 사이에 온다', () => {
+  const html = hostHtml({ ...base, scrim: true, backdrop: { id: 'aurora', src: 'b.html' } });
+  const i = (s) => html.indexOf(s);
+  assert.ok(i('id="backdrop"') < i('id="scrim"') && i('id="scrim"') < i('id="caption-host"'));
+  assert.match(html, /id="scrim"[^>]*class="clip"|class="clip"[^>]*id="scrim"/);
+});
+
+test('hostHtml: scrim 이 있으면 자막 호스트는 scrim 보다 높은 track', () => {
+  const html = hostHtml({ ...base, scrim: true, backdrop: { id: 'aurora', src: 'b.html' } });
+  const track = (id) => Number(new RegExp(`id="${id}"[^>]*data-track-index="(\\d+)"`).exec(html)[1]);
+  assert.ok(track('backdrop') < track('scrim') && track('scrim') < track('caption-host'));
+});
+
+test('hostHtml: 배경이 충분히 길면 한 번만 마운트한다', () => {
+  const html = hostHtml({ ...base, backdrop: { id: 'x', src: 'b.html', duration: 12 } });
+  assert.equal([...html.matchAll(/data-composition-src="b.html"/g)].length, 1);
+  assert.match(html, /id="backdrop"[^>]*data-duration="8"/);
+});
+
+test('hostHtml: duration 을 모르는 배경은 한 번만 마운트한다 (기존 동작)', () => {
+  const html = hostHtml({ ...base, backdrop: { id: 'x', src: 'b.html' } });
+  assert.equal([...html.matchAll(/data-composition-src="b.html"/g)].length, 1);
+});
+
+// --- spec-01-03: W/BLOCKS 구조 ---
+const cues2 = [
+  { index: 1, start: 0, end: 2, text: '이펙트 샘플을 보여드립니다' },
+  { index: 2, start: 3, end: 5, text: '안녕' },
+  { index: 3, start: 5, end: 7, text: '가 나나 다' },
+];
+
+test('emphasisIndexes: 구간마다 가장 긴 단어의 전체 인덱스를 고른다 (동률이면 앞쪽)', () => {
+  assert.deepEqual(emphasisIndexes(cues2), [2, 3, 5]);
+});
+
+test('editorialBlocks: 앞 절반(올림)은 line1, 나머지는 line2, 강조는 e', () => {
+  const b = editorialBlocks(cues2);
+  assert.deepEqual(b[0], { line1: [[0, 'n'], [1, 'n']], line2: [[2, 'e']] });
+});
+
+test('editorialBlocks: 단어 1개면 line1 만 있고 line2 는 null', () => {
+  assert.deepEqual(editorialBlocks(cues2)[1], { line1: [[3, 'e']], line2: null });
+});
+
+test('editorialBlocks: 모든 단어 인덱스가 한 번씩 나온다', () => {
+  const idx = editorialBlocks(cues2).flatMap((b) => [...b.line1, ...(b.line2 ?? [])].map((p) => p[0]));
+  assert.deepEqual(idx.sort((a, b) => a - b), [0, 1, 2, 3, 4, 5, 6]);
+});
+
+test('parallaxBlocks: 강조 단어는 behind, 나머지는 front', () => {
+  assert.deepEqual(parallaxBlocks(cues2)[0], { behind: [[2]], front: [[0], [1]] });
+});
+
+test('parallaxBlocks: 단어 1개면 behind 만, front 는 null', () => {
+  assert.deepEqual(parallaxBlocks(cues2)[1], { behind: [[3]], front: null });
+});
+
+test('injectWords: var W 배열도 치환한다 (var WORDS 와 혼동하지 않는다)', () => {
+  const html = 'var WORDS_X = 1;\nvar W = [\n { text: "Every", start: 0, end: 1 },\n];\nvar BLOCKS = [];';
+  const out = injectWords(html, words, []);
+  assert.match(out, /var W = \[[\s\S]*text: "가"/);
+  assert.match(out, /var WORDS_X = 1;/);
+});
+
+test('injectBlocks: var BLOCKS 리터럴을 치환하고 뒤의 코드는 둔다', () => {
+  const html = 'var BLOCKS = [\n  { a: [[0, "n"]] },\n];\nvar CLASS_MAP = {};';
+  const out = injectBlocks(html, [{ line1: [[0, 'e']], line2: null }]);
+  assert.match(out, /var BLOCKS = \[\s*\{ "line1": \[\[0, "e"\]\], "line2": null \},?\s*\];/);
+  assert.match(out, /var CLASS_MAP = \{\};/);
+});
+
+test('injectBlocks: BLOCKS 가 없으면 오류', () => {
+  assert.throws(() => injectBlocks('<p></p>', []), /BLOCKS/);
+});
+
+test('injectCaptions: WORDS 구조는 단어와 RAW_GROUPS 를 치환한다', () => {
+  const out = injectCaptions(WORDS_HTML, cues2);
+  assert.match(out, /text: "이펙트"/);
+  assert.match(out, /var RAW_GROUPS = \[\s*\[0, 2\],\s*\[3, 3\],\s*\[4, 6\],?\s*\];/);
+});
+
+test('injectCaptions: line1/line2 BLOCKS 구조는 editorial 블록을 넣는다', () => {
+  const html = 'var W = [\n { text: "a", start: 0, end: 1 },\n];\nvar BLOCKS = [\n { line1: [[0, "n"]], line2: null },\n];';
+  const out = injectCaptions(html, cues2);
+  assert.match(out, /"line1": \[\[0, "n"\], \[1, "n"\]\]/);
+  assert.match(out, /text: "이펙트"/);
+});
+
+test('injectCaptions: behind/front BLOCKS 구조는 parallax 블록을 넣는다', () => {
+  const html = 'var W = [\n { text: "a", start: 0, end: 1 },\n];\nvar BLOCKS = [\n { behind: null, front: [[0]] },\n];';
+  const out = injectCaptions(html, cues2);
+  assert.match(out, /"behind": \[\[2\]\]/);
+});
+
+test('injectCaptions: BLOCKS 모양을 모르면 오류 (모의 성공 금지)', () => {
+  const html = 'var W = [\n { text: "a", start: 0, end: 1 },\n];\nvar BLOCKS = [\n { foo: 1 },\n];';
+  assert.throws(() => injectCaptions(html, cues2), /BLOCKS/);
+});
+
+test('hostHtml: 배경이 video 파일이면 <video> 로 깔고 컴포지션 마운트는 하지 않는다', () => {
+  const html = hostHtml({ ...base, backdrop: { id: 'swirl', video: 'assets/backdrops/swirl-loop.mp4' } });
+  assert.match(html, /<video id="backdrop"[^>]*src="assets\/backdrops\/swirl-loop.mp4"/);
+  assert.match(html, /<video id="backdrop"[^>]*muted/);
+  assert.match(html, /<video id="backdrop"[^>]*data-start="0"[^>]*data-duration="8"|<video id="backdrop"[^>]*data-duration="8"[^>]*data-start="0"/);
+  assert.doesNotMatch(html, /data-composition-id="swirl"/);
+});
+
+test('hostHtml: video 배경도 자막보다 앞 순서이고 낮은 track 이다', () => {
+  const html = hostHtml({ ...base, scrim: true, backdrop: { id: 'swirl', video: 'assets/b.mp4' } });
+  assert.ok(html.indexOf('id="backdrop"') < html.indexOf('id="scrim"') && html.indexOf('id="scrim"') < html.indexOf('id="caption-host"'));
+  assert.match(html, /<video id="backdrop"[^>]*data-track-index="0"/);
+});
+
+// --- spec-01-03: 하드코딩된 묶음(GROUPS)과 키워드(KEYWORDS) ---
+const GROUPS_HTML = `var WORDS = [
+  { text: "a", start: 0, end: 1 },
+];
+var GROUPS = [
+  { wordStart: 0, wordEnd: 3, start: 0.0, end: 1.05 },
+  { wordStart: 4, wordEnd: 7, start: 1.1, end: 2.05 },
+];
+var SIRI_GRAD = "x";`;
+
+test('injectCaptions: 객체형 GROUPS(wordStart/wordEnd/start/end)를 구간으로 치환한다', () => {
+  const out = injectCaptions(GROUPS_HTML, cues2);
+  assert.match(out, /\{ wordStart: 0, wordEnd: 2, start: 0, end: 2 \}/);
+  assert.match(out, /\{ wordStart: 3, wordEnd: 3, start: 3, end: 5 \}/);
+  assert.match(out, /var SIRI_GRAD = "x";/);
+  assert.doesNotMatch(out, /wordEnd: 7/);
+});
+
+test('injectCaptions: 숫자 KEYWORDS 집합을 강조 단어 인덱스로 치환한다', () => {
+  const html = 'var WORDS = [\n { text: "a", start: 0, end: 1 },\n];\nvar KEYWORDS = new Set([8, 12, 15, 24, 27]); // x';
+  assert.match(injectCaptions(html, cues2), /var KEYWORDS = new Set\(\[2, 3, 5\]\);/);
+});
+
+test('injectCaptions: 문자열 KEYWORDS 집합은 강조 단어(소문자)로 치환한다', () => {
+  const html = 'var TRANSCRIPT = [\n { text: "a", start: 0, end: 1 },\n];\nvar KEYWORDS = new Set(["hyperframes", "html"]);';
+  assert.match(injectCaptions(html, cues2), /var KEYWORDS = new Set\(\["보여드립니다", "안녕", "나나"\]\);/);
+});
+
+test('injectCaptions: GROUPS·KEYWORDS 가 없는 컴포넌트는 그대로 둔다', () => {
+  const out = injectCaptions(WORDS_HTML, cues2);
+  assert.doesNotMatch(out, /KEYWORDS|wordStart/);
 });

@@ -45,7 +45,8 @@ Video Factory는 Hypit / HyperFrames / FFmpeg 같은 기존 도구를 조합해 
 | ID | 슬러그 | 우선순위 | 상태 | 디렉토리 |
 |---|---|:---:|---|---|
 | `spec-01-01` | hyperframes-blocks | P? | Merged | `specs/spec-01-01-hyperframes-blocks/` |
-| `spec-01-02` | caption-styles | P? | Active | `specs/spec-01-02-caption-styles/` |
+| `spec-01-02` | caption-styles | P? | Merged | `specs/spec-01-02-caption-styles/` |
+| `spec-01-03` | caption-gallery | P? | Merged | `specs/spec-01-03-caption-gallery/` |
 <!-- sdd:specs:end -->
 
 ### spec-1-01 — hyperframes-blocks
@@ -60,11 +61,12 @@ Video Factory는 Hypit / HyperFrames / FFmpeg 같은 기존 도구를 조합해 
 - **방향성**: 음성 없이 사람이 정한 타이밍으로 동작하는지 확인. 단어 타이밍 JSON 요구사항 문서화
 - **참조**: `docs/plan/product-and-script-plan.md` §4
 
-### spec-1-03 — ffmpeg-sample-and-findings
+### spec-1-03 — caption-gallery
 
-- **요점**: FFmpeg 설치 확인 + ffprobe 검사 스크립트, 샘플 영상 1편(블록+자막) 생성, 라이선스·작성자 필드 정리, Hypit 설치·라이선스 최소 점검, 결과를 `docs/tool-findings.md`에 정리
-- **방향성**: spec-1-01/02 결과로 쇼케이스 실현 가능 범위를 결정. 도구는 HyperFrames 하나로 시작
-- **참조**: `docs/proposal/review.md` 설계상 리스크 1
+- **요점**: 자막 컴포넌트 16개 전부를 성격이 다른 블록 배경 4~5개 위에서 렌더하고, 스타일·배경 이름을 표기한 모음 영상 1편과 프레임 시트를 만든다. 밝은 배경에서 묻히는 스타일에 scrim 을 시험한다
+- **방향성**: spec-1-02 평가("같은 자막을 여러 배경에 넣었을 뿐")에 따라 폭을 넓힌다. 첫 볼 만한 산출물. 업로드는 하지 않는다
+- **참조**: `docs/tool-findings.md`, ADR-001
+- **이월(다음 spec 후보)**: 블록 작성자·라이선스 표기와 크레딧 방침, 브랜드 모방 블록 처리 기준, ffprobe 검사 스크립트 정리 (원래 spec-1-03 범위였음)
 
 ### phase-FF 예정 항목 (spec 미생성)
 

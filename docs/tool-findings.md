@@ -154,3 +154,49 @@ node scripts/render-captions.mjs --backdrop=<블록>         # 블록 배경 위
 - 긴 문장·3줄 이상·구간이 짧은 경우의 줄바꿈과 겹침
 - 영상 위 자막(`<video>` 배경), 오버레이 블록과의 합성 (spec-01-03)
 - **사용자 판정: 한글 표시, 단어 강조 타이밍, 배경 위 가독성 (판정 미수령).** 사용자는 `pill-karaoke` 영상을 재생했고 "자막 이펙트가 다양한 영상 위에서 다양하게 보여야 한다"는 방향을 주었다
+
+## HyperFrames — 자막 갤러리 (spec-01-03, 2026-10-29)
+
+### 환경·절차
+`hyperframes@0.8.206` 고정, 렌더 `draft`, 텔레메트리 off. 자막 컴포넌트 16개 × 배경 5개 = 80조합을 한국어 SRT(3구간, 9단어)로 렌더했다.
+```bash
+node scripts/render-captions.mjs --dry-run                         # 스타일 16, 배경 5, 80조합 확인
+node scripts/render-captions.mjs --backdrops=<블록,...> [--only=<스타일,...>] [--scrim] [--force]
+node scripts/build-reel.mjs [--per-style=2] [--exclude=키,키]       # 모음 영상 + 프레임 시트
+```
+결과는 `runs/phase-01/captions-matrix.json`(git 제외, 조합마다 즉시 저장·재개). 배경은 `catalog/validation/backdrops.json`(mk-background, data-chart, swirl, gallery-tunnel, canopy-part-title).
+
+### 결과 (80조합 + scrim 8)
+- **75/80 렌더 success.** 실패 5건은 전부 `caption-emoji-pop` (아래 참고). 나머지 15개 스타일은 5개 배경 모두 렌더·`check` 통과.
+- 구조가 다른 `W`/`BLOCKS` 컴포넌트(`editorial-emphasis`, `parallax-layers`)도 치환해 렌더됐다. SRT에 강조 정보가 없어 "구간에서 가장 긴 단어 = 강조"라는 임시 규칙을 썼다.
+- 한 건 약 20~40초(draft), 배경이 무거워도 큰 차이는 없었다. 80개 연속 실행은 약 1시간이고 PC 부하가 커서, 재개할 때는 4개씩 나눠 돌렸다.
+
+### 눈으로 본 가독성 (3.8초 프레임 한 장 기준, 영상 전체 재생은 안 함)
+| 구분 | 스타일 |
+|---|---|
+| 배경과 무관하게 읽힘 | `pill-karaoke`, `glitch-rgb`, `highlight`(박스형), `kinetic-slam`, `neon-accent`, `matrix-decode` |
+| 밝은 배경(mk-background, data-chart)에서 묻힘, scrim 으로 개선 | `clip-wipe`, `gradient-fill`, `weight-shift`(차트 막대와 겹침은 남음), `neon-glow`·`particle-burst`(소폭) |
+| scrim 으로 해결 안 됨 | `texture`(자막이 화면 중앙이라 아래쪽 scrim 이 못 덮음), `camera-follow`(글자가 번져 안 읽힘), `parallax-layers`(빨간 글씨가 화면과 차트를 덮음) |
+| 렌더 불가 | `emoji-pop` |
+
+- scrim(화면 아래쪽 어두운 막)은 자막이 아래쪽에 있는 스타일에서만 효과가 있다. 중앙에 뜨는 자막은 못 덮는다.
+- `check` 가 모두 `ok` 여도 눈으로는 안 읽히는 조합이 있다 (spec-01-02 발견 2 재확인). 가독성은 프레임으로 봐야 한다.
+- 왼쪽 위 스타일 라벨이 `data-chart` 의 제목과 겹친다 (라벨 위치 조정 필요, 이번엔 안 고침).
+
+### `emoji-pop` 렌더 실패 (미해결)
+- 5개 배경에서 4건 실패(`navigation_timeout` 3, `gpu` 1), 1건은 179초 걸려 렌더 후 `check` 에러로 partial. 추가로 draft 1회(240초 상한) 시도했고 같은 `page.goto` 에서 60초 Navigation timeout 이 재현됐다. 그 뒤로 재시도하지 않았다.
+- **화질·PC 부하와 무관하게 페이지 로드 단계에서 막힌다.** 나머지 14개는 같은 Google Fonts 요청을 하고도 정상이며, 터미널 `curl` 응답은 0.2초다. 그래서 외부 폰트·네트워크 가설은 근거가 약하다.
+- 다른 점은 컬러 이모지 글꼴과 파일 크기(13KB, 다른 것은 6KB 안팎)뿐이다. **원인은 확인하지 못했다.** 필요하면 별도 spec 에서 다룬다.
+
+### 모음 영상
+`caption-gallery.mp4` (1920x1080, h264, 192초, 24클립, `ffprobe` 통과). 스타일당 최대 2개 배경이고, 읽히지 않는 조합과 `camera-follow`, `parallax-layers`, `texture`, `emoji-pop` 은 뺐다. 제외는 프레임 시트를 보고 정했다 (`runs/` 는 git 제외, 업로드 안 함).
+
+### 발견한 문제와 처리
+1. 1차 전체 실행(약 70분)은 **무효**였다. `check` 가 다른 조합 파일까지 린트해 72개가 `partial` 로 오염됐고, 자막 스크립트가 터진 렌더가 exit 0 으로 `success` 처리됐다. 조합 범위로 `check` 를 한정하고 스크립트 오류를 감지하도록 고친 뒤 전체를 다시 돌렸다 (1차는 `captions-matrix.v1-contaminated.json` 로 보존).
+2. 2초짜리 셰이더 배경(`swirl`)을 같은 노드로 반복 마운트하면 2초 이후 검은 화면이 나왔는데 `success` 로 기록됐다. 영상 이어 붙이기로 바꾸고 배경 사라짐을 검사하도록 했다 (이음새는 눈으로 판정 필요).
+
+### 미확인 (이 spec에서 하지 않은 것)
+- **사용자 판정 (모음 영상 재생, 읽힘, 이음새): 판정 미수령.** 제외 기준은 프레임 시트 한 장 기준의 에이전트 판단이다.
+- 영상 전체 구간 재생 확인, 단어별 타이밍 이펙트가 의도대로 나오는지
+- `emoji-pop` 실패 원인, 다른 OS·컨테이너에서의 한글 폰트 모양
+- 세로(portrait), 긴 문장·3줄 이상, 영상(`<video>`) 위 자막의 실사용 확인

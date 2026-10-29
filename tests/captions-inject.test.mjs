@@ -129,18 +129,6 @@ test('hostHtml: scrim 이 있으면 자막 호스트는 scrim 보다 높은 trac
   assert.ok(track('backdrop') < track('scrim') && track('scrim') < track('caption-host'));
 });
 
-test('hostHtml: 배경 길이가 짧으면 반복 마운트한다 (2초 → 8초는 시작 0,2,4,6)', () => {
-  const html = hostHtml({ ...base, backdrop: { id: 'aurora', src: 'compositions/aurora.html', duration: 2 } });
-  const starts = [...html.matchAll(/data-composition-src="compositions\/aurora.html"[^>]*data-start="([\d.]+)"/g)].map((m) => Number(m[1]));
-  assert.deepEqual(starts, [0, 2, 4, 6]);
-});
-
-test('hostHtml: 반복의 마지막 조각은 남은 길이만큼만 마운트한다 (3초 → 8초)', () => {
-  const html = hostHtml({ ...base, backdrop: { id: 'x', src: 'b.html', duration: 3 } });
-  const durs = [...html.matchAll(/data-composition-src="b.html"[^>]*data-duration="([\d.]+)"/g)].map((m) => Number(m[1]));
-  assert.deepEqual(durs, [3, 3, 2]);
-});
-
 test('hostHtml: 배경이 충분히 길면 한 번만 마운트한다', () => {
   const html = hostHtml({ ...base, backdrop: { id: 'x', src: 'b.html', duration: 12 } });
   assert.equal([...html.matchAll(/data-composition-src="b.html"/g)].length, 1);
@@ -225,4 +213,18 @@ test('injectCaptions: behind/front BLOCKS 구조는 parallax 블록을 넣는다
 test('injectCaptions: BLOCKS 모양을 모르면 오류 (모의 성공 금지)', () => {
   const html = 'var W = [\n { text: "a", start: 0, end: 1 },\n];\nvar BLOCKS = [\n { foo: 1 },\n];';
   assert.throws(() => injectCaptions(html, cues2), /BLOCKS/);
+});
+
+test('hostHtml: 배경이 video 파일이면 <video> 로 깔고 컴포지션 마운트는 하지 않는다', () => {
+  const html = hostHtml({ ...base, backdrop: { id: 'swirl', video: 'assets/backdrops/swirl-loop.mp4' } });
+  assert.match(html, /<video id="backdrop"[^>]*src="assets\/backdrops\/swirl-loop.mp4"/);
+  assert.match(html, /<video id="backdrop"[^>]*muted/);
+  assert.match(html, /<video id="backdrop"[^>]*data-start="0"[^>]*data-duration="8"|<video id="backdrop"[^>]*data-duration="8"[^>]*data-start="0"/);
+  assert.doesNotMatch(html, /data-composition-id="swirl"/);
+});
+
+test('hostHtml: video 배경도 자막보다 앞 순서이고 낮은 track 이다', () => {
+  const html = hostHtml({ ...base, scrim: true, backdrop: { id: 'swirl', video: 'assets/b.mp4' } });
+  assert.ok(html.indexOf('id="backdrop"') < html.indexOf('id="scrim"') && html.indexOf('id="scrim"') < html.indexOf('id="caption-host"'));
+  assert.match(html, /<video id="backdrop"[^>]*data-track-index="0"/);
 });

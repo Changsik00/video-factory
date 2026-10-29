@@ -120,7 +120,7 @@ test('assetCopies: 이미 루트 assets 이거나 assets 폴더가 없으면 빈
   assert.deepEqual(assetCopies(['/p/assets/x.png'], '/p'), []);
 });
 
-import { summarizeCheck } from '../scripts/lib/diagnose.mjs';
+import { backdropVerdict, parseYavg, summarizeCheck } from '../scripts/lib/diagnose.mjs';
 
 const section = (e = 0, w = 0, extra = {}) => ({ ok: e === 0, errorCount: e, warningCount: w, infoCount: 0, ...extra });
 const CHECK = {
@@ -158,4 +158,31 @@ test('summarizeCheck: 오류가 있으면 오류 수를 더한다', () => {
 test('summarizeCheck: 알 수 없는 형태면 null (성공으로 간주하지 않는다)', () => {
   assert.equal(summarizeCheck(null), null);
   assert.equal(summarizeCheck({ foo: 1 }), null);
+});
+
+const yavgText = (vals) => vals.map((v) => `lavfi.signalstats.YAVG=${v}`).join('\n');
+
+test('parseYavg: 프레임별 YAVG 의 평균을 낸다', () => {
+  assert.equal(parseYavg(yavgText([100, 200, 0])), 100);
+});
+
+test('parseYavg: 출력이 없으면 null', () => {
+  assert.equal(parseYavg(''), null);
+});
+
+test('backdropVerdict: 렌더 평균 밝기가 배경 측정값에 가까우면 ok', () => {
+  assert.equal(backdropVerdict(130, 139), 'ok');
+});
+
+test('backdropVerdict: 렌더 평균이 배경 측정값의 절반 미만이면 backdrop_missing (배경이 중간에 사라짐)', () => {
+  assert.equal(backdropVerdict(35, 139), 'backdrop_missing');
+});
+
+test('backdropVerdict: 원래 어두운 배경(60 미만)은 판정하지 않는다', () => {
+  assert.equal(backdropVerdict(5, 27), 'ok');
+});
+
+test('backdropVerdict: 값을 모르면 unknown', () => {
+  assert.equal(backdropVerdict(null, 139), 'unknown');
+  assert.equal(backdropVerdict(100, undefined), 'unknown');
 });

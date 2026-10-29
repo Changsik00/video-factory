@@ -21,9 +21,9 @@ export function inferReason(stderr, { timedOut = false } = {}) {
   return 'other';
 }
 
-export function missingFromRegistry(names, items) {
-  const blocks = new Set(items.filter((i) => i.type === 'hyperframes:block').map((i) => i.name));
-  return names.filter((n) => !blocks.has(n));
+export function missingFromRegistry(names, items, type = 'hyperframes:block') {
+  const found = new Set(items.filter((i) => i.type === type).map((i) => i.name));
+  return names.filter((n) => !found.has(n));
 }
 
 // `hyperframes add --json` 의 written 목록에서 블록 본체 html 의 프로젝트 상대 경로를 찾는다.
@@ -65,4 +65,31 @@ export function assetCopies(written, projectDir) {
     }
   }
   return out;
+}
+
+// `hyperframes check --json` 결과를 섹션 합계로 요약한다. 형태를 모르면 null (통과로 간주하지 않는다).
+const CHECK_SECTIONS = ['lint', 'runtime', 'layout', 'motion', 'contrast'];
+
+export function summarizeCheck(json) {
+  if (!json || typeof json !== 'object' || !CHECK_SECTIONS.some((k) => json[k])) return null;
+  let errors = 0;
+  let warnings = 0;
+  const disabled = [];
+  for (const k of CHECK_SECTIONS) {
+    const s = json[k];
+    if (!s) continue;
+    errors += s.errorCount ?? 0;
+    warnings += s.warningCount ?? 0;
+    if (s.enabled === false) disabled.push(k);
+  }
+  const codes = [...new Set((json.lint?.findings ?? []).map((f) => f.code))];
+  const c = json.contrast;
+  return {
+    ok: json.ok === true,
+    errors,
+    warnings,
+    codes,
+    disabled,
+    contrast: c?.enabled ? { checked: c.checked, passed: c.passed } : undefined,
+  };
 }

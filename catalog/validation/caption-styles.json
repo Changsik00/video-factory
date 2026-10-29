@@ -1,0 +1,5 @@
+{
+  "note": "spec-01-02 시험용. fallbacks 는 styles 중 설치·조립이 실패했을 때 대체로 쓴다 (사유를 결과에 기록).",
+  "styles": ["caption-highlight", "caption-pill-karaoke", "caption-clip-wipe", "caption-weight-shift", "caption-glitch-rgb"],
+  "fallbacks": ["caption-neon-glow", "caption-gradient-fill", "caption-editorial-emphasis"]
+}

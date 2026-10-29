@@ -36,6 +36,12 @@ test('missingFromRegistry: 블록이 아닌 항목(component)은 블록으로 �
   assert.deepEqual(missingFromRegistry(['b'], items), ['b']);
 });
 
+test('missingFromRegistry: type 을 지정하면 그 타입으로 판정한다 (component)', () => {
+  const items = [{ name: 'b', type: 'hyperframes:component' }, { name: 'a', type: 'hyperframes:block' }];
+  assert.deepEqual(missingFromRegistry(['b'], items, 'hyperframes:component'), []);
+  assert.deepEqual(missingFromRegistry(['a'], items, 'hyperframes:component'), ['a']);
+});
+
 test('tail: 마지막 N줄만, ANSI 제거', () => {
   assert.equal(tail('a\nb\n\u001b[31mc\u001b[0m\nd', 2), 'c\nd');
   assert.equal(tail('', 3), '');
@@ -112,4 +118,44 @@ test('assetCopies: 하위 폴더 블록의 assets 를 프로젝트 루트 assets
 test('assetCopies: 이미 루트 assets 이거나 assets 폴더가 없으면 빈 배열', () => {
   assert.deepEqual(assetCopies(['/p/compositions/a.html'], '/p'), []);
   assert.deepEqual(assetCopies(['/p/assets/x.png'], '/p'), []);
+});
+
+import { summarizeCheck } from '../scripts/lib/diagnose.mjs';
+
+const section = (e = 0, w = 0, extra = {}) => ({ ok: e === 0, errorCount: e, warningCount: w, infoCount: 0, ...extra });
+const CHECK = {
+  ok: true,
+  lint: { ...section(0, 2), findings: [{ code: 'studio_missing_editable_id' }, { code: 'negative_z_index' }, { code: 'negative_z_index' }] },
+  runtime: section(),
+  layout: section(),
+  motion: section(0, 0, { enabled: false }),
+  contrast: section(0, 0, { enabled: true, checked: 12, passed: 12 }),
+};
+
+test('summarizeCheck: 섹션별 오류·경고 합계를 낸다', () => {
+  const s = summarizeCheck(CHECK);
+  assert.equal(s.ok, true);
+  assert.equal(s.errors, 0);
+  assert.equal(s.warnings, 2);
+});
+
+test('summarizeCheck: lint 경고 코드는 중복 없이 모은다', () => {
+  assert.deepEqual(summarizeCheck(CHECK).codes, ['studio_missing_editable_id', 'negative_z_index']);
+});
+
+test('summarizeCheck: 꺼진 섹션(motion)과 대비 검사 수를 알려준다', () => {
+  const s = summarizeCheck(CHECK);
+  assert.deepEqual(s.disabled, ['motion']);
+  assert.deepEqual(s.contrast, { checked: 12, passed: 12 });
+});
+
+test('summarizeCheck: 오류가 있으면 오류 수를 더한다', () => {
+  const s = summarizeCheck({ ...CHECK, ok: false, layout: section(3, 1) });
+  assert.equal(s.errors, 3);
+  assert.equal(s.warnings, 3);
+});
+
+test('summarizeCheck: 알 수 없는 형태면 null (성공으로 간주하지 않는다)', () => {
+  assert.equal(summarizeCheck(null), null);
+  assert.equal(summarizeCheck({ foo: 1 }), null);
 });

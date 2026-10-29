@@ -8,7 +8,7 @@
 ## 📦 진행 중 Phase
 
 <!-- sdd:active:start -->
-- **phase-01** — tool-validation — 1 spec — 다음: spec-01-01-hyperframes-blocks
+- **phase-01** — tool-validation — 2 spec — 다음: spec-01-02-caption-styles
 <!-- sdd:active:end -->
 
 ## 📥 spec-x 대기

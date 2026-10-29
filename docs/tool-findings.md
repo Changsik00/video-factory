@@ -79,3 +79,78 @@ node scripts/render-blocks.mjs --only=<블록> --suffix=-ko --variables='{"키":
 - 오디오가 필요한 블록(음성 없는 방향이라 제외)
 - 시각 품질의 사람 판정, 한국어 표시의 사용자 확인
 - `caption-*` 자막 컴포넌트 (spec-01-02), 샘플 영상·라이선스·작성자 정리·Hypit 점검 (spec-01-03)
+
+## HyperFrames — 자막 컴포넌트 (spec-01-02, 2026-10-28)
+
+### 환경·절차
+환경은 위와 같다 (`hyperframes@0.8.206` 고정, 렌더 `draft`, 텔레메트리 off).
+```bash
+npm test                                                   # srt, 치환, 호스트 HTML 단위 테스트
+node scripts/render-captions.mjs --dry-run                 # SRT 검증 + 레지스트리(component) 확인
+node scripts/render-captions.mjs                           # 자막 단독 (어두운 단색 바탕)
+node scripts/render-captions.mjs --backdrop=<블록>         # 블록 배경 위에 자막
+```
+입력은 `catalog/validation/captions.srt`(한국어 3구간, 9단어, 0.5~7.5초), 시험 스타일은 `catalog/validation/caption-styles.json`. 구간은 공백 기준 단어로 나누고 글자 수 비례로 시간을 분배한다 (`scripts/lib/srt.mjs`).
+
+### 컴포넌트가 붙는 방식 (실측)
+- **컴포넌트는 독립 실행되는 전체 HTML이다.** 호스트에 붙여넣는 조각이 아니다 (`wiring-components.md` 문서의 설명과 다르게 이번 5개는 `data-composition-id`와 `data-duration`을 가진 완결 문서). 루트 `index.html`에서 `data-composition-src`로 마운트하면 `check`와 렌더가 동작한다.
+- 예시 영어 단어가 코드 안에 박혀 있다: `var WORDS = [...]`(2개) 또는 `var TRANSCRIPT = [...]`(3개), 모두 `{text,start,end}` 모양. `highlight`, `clip-wipe`는 묶음(`RAW_GROUPS`)도 수동 지정이라 같이 치환했다. 나머지 3개는 자동 묶음이다. **5개 모두 같은 방식으로 치환되어 자동화에 문제가 없었다.** 16개 전체에 일반화하지는 못한다.
+- 컴포넌트 폰트는 Google Fonts(Montserrat, Poppins, Space Grotesk, 라틴 전용)다. 이 Mac에는 설치돼 있지 않고(`fc-list` 0건), **한글은 시스템 대체 폰트로 그려졌다.** 다른 OS/컨테이너에서는 한글 모양이 달라질 수 있다 (미확인).
+
+### 결과 1: 자막 단독 (5개, 어두운 단색 바탕)
+| 스타일 | 결과 | check (오류/경고) | 화면 | 렌더(초) | 프레임 확인 |
+|---|---|---|---|---|---|
+| caption-highlight | success | 0 / 1 | ok | 19 | 강조 박스가 단어 구간을 따라 이동 |
+| caption-pill-karaoke | success | 0 / 4 | ok | 18 | 단어별 색 진행 |
+| caption-clip-wipe | success | 0 / 1 | ok | 20 | 단어 단위 노출. 아직 안 나온 단어 자리를 비운 채 가운데 정렬해 처음엔 왼쪽으로 치우침 |
+| caption-weight-shift | success | 0 / 1 | ok | 21 | 두 줄(굵게/얇게) |
+| caption-glitch-rgb | success | 0 / 1 | ok | 24 | 단어에서 RGB 분리 |
+
+한글은 5개 모두 두부(□) 없이 표시되었다. 경고는 전부 컴포넌트 내부의 `z-index:-1`(`negative_z_index`)이다 (`pill-karaoke`만 4건).
+
+### 결과 2: 블록 배경 위 (배경 3개 × 스타일 5개 = 15)
+배경은 밝기(YAVG)로 골랐다: `data-chart` 222(밝음), `spain-map` 45(어둡고 디테일 많음), `canopy-part-title` 27(어둡고 질감). **중간 밝기(60~180) 배경은 후보에 없어 확인하지 못했다.**
+
+| 스타일 | data-chart (밝음) | spain-map (어두움) | canopy-part-title (어두움) |
+|---|---|---|---|
+| highlight | 강조 단어만 읽힘, 나머지 흐림 · check 오류 1 | 읽힘 · 오류 6* | 읽힘 · 오류 0 |
+| pill-karaoke | **읽힘** (자체 알약 배경) · 오류 6* | 읽힘 · 오류 8* | 읽힘 · 오류 0 |
+| clip-wipe | **거의 안 보임 · check 통과(오류 0)** | 읽힘 · 오류 6* | 읽힘 · 오류 0 |
+| weight-shift | **거의 안 보임** · 오류 10* | 읽힘 · 오류 6* | 읽힘 · 오류 0 |
+| glitch-rgb | **읽힘** (자체 어두운 그라데이션) · 오류 11* | 읽힘 · 오류 6* | 읽힘 · 오류 0 |
+
+"읽힘/안 보임"은 중간 프레임(1.2, 3.8, 6.2초)을 AI가 읽은 판단이며 **사용자 판정이 필요하다** (`runs/phase-01/posters/backdrop-*.png`, git 제외). `*` 표시는 배경 블록 자신의 글씨가 오류에 섞인 것으로 보인다 (아래 3번).
+
+### 발견한 문제와 처리
+1. **밝은 배경에서는 흰 글자 자막(`weight-shift`, `clip-wipe`, 일부 `highlight`)이 묻힌다.** 자체 배경이 있는 `pill-karaoke`와 `glitch-rgb`는 배경 밝기에 영향을 덜 받는다. 쇼케이스에는 배경 밝기에 맞는 스타일 선택 또는 자막용 어두운 막(scrim)이 필요하다. 스킬 문서도 밝기 60 초과 배경에는 scrim을 권한다.
+2. **`check`의 대비 판정은 가독성의 기준이 될 수 없다.** `data-chart` 위 `clip-wipe`는 눈으로 안 읽히는데 지적이 없다. 한편 `spain-map` 위 오류 6건은 5개 스타일에서 똑같이 나왔고 셀렉터가 `svg > g`여서 **배경 지도 블록 자체의 글씨**에서 나온 것이다. 가독성은 프레임을 보거나 별도 측정이 필요하다.
+3. 오류 수에 배경 블록 자신의 문제가 섞인다. 자막만 분리해 판정하려면 배경만 `check`한 대조가 필요하다 (이번엔 하지 않음).
+4. 러너 거짓 성공 방지: `check` 오류가 있으면 `partial`로 분류하도록 고쳤다. `check --json`의 `ok:true`만 기록하던 때는 경고가 숨었다 (`summarizeCheck`로 섹션별 기록).
+5. 러너 결함 1건을 고쳤다: 레지스트리 확인 함수가 블록만 인정해 컴포넌트를 전부 "없음"으로 판정했다 (type 인자 추가).
+6. `check`의 `motion` 섹션은 기본으로 꺼져 있다(`enabled:false`). 모션 검사는 하지 않았다.
+
+### 결과 3: 스타일 수정 주문이 반영되는가 (실험 1회)
+`caption-highlight` 복사본(`runs/phase-01/cap-sandbox/`, git 제외)의 CSS/GSAP를 직접 고쳐 주문 5개를 시험했다.
+
+| 주문 | 방법 | 반영 |
+|---|---|---|
+| 강조색 노랑 | `.hl-word-bg` 배경과 그림자 색 | 확인 |
+| 글자 크게 (80→120px) | `fitFontSize` 기준 크기 | 확인 |
+| 위치 위로 (140→300px) | `.hl-group` `bottom` | 확인 |
+| 튕기듯 등장 | 박스 트윈 이징 `back.out(3)` | 프레임에서 박스 넘침으로 확인 (영상 재생 확인은 안 함) |
+| 글자 검정 | - | **적용하지 못함 (AI가 빠뜨림).** 노랑 박스 위 흰 글자가 되어 가독성이 나쁨 |
+
+- 컴포넌트는 설치되면 평범한 소스라 CSS/JS를 고치는 방식으로 세세한 주문이 반영된다. 옵션 화면이나 변수로 바꾸는 방식이 아니며, 컴포넌트마다 구조가 달라 고칠 위치가 다르다.
+- 주문 항목이 많을수록 누락·충돌(노랑 + 흰 글자)이 생긴다. 이를 잡는 것은 `check`가 아니라 프레임 확인이다.
+- 모호한 주문("쫀득하게")은 해석이 갈려 미리보기 반복이 필요하다.
+- 강조할 단어는 SRT로 알 수 없다 (글자 수 비례 분배는 의미와 무관). 대본 형식에 강조 표기가 필요하다.
+- 시험하지 않은 것: 레지스트리에 없는 새 효과를 처음부터 만들기, 컴포넌트가 노출하는 `variables`(`data-variable-values`)로 바꾸기, 같은 수정 명세를 다른 문장·영상에 재적용.
+
+### 미확인 (이 spec에서 하지 않은 것)
+- 나머지 11개 자막 컴포넌트, 세로(portrait) 자막, 영어 병기
+- 단어 분배의 의미 있는 강조 위치: 글자 수 비례는 실제 발화와 무관하다. "동작하고 구간에 맞게 보인다"까지만 확인.
+- 중간 밝기(60~180) 배경, 배경만 `check`한 대조, 자막용 scrim 적용 효과
+- 한글 폰트를 번들해 OS 간 동일하게 보이는지 (`assets/fonts/` + `@font-face`)
+- 긴 문장·3줄 이상·구간이 짧은 경우의 줄바꿈과 겹침
+- 영상 위 자막(`<video>` 배경), 오버레이 블록과의 합성 (spec-01-03)
+- **사용자 판정: 한글 표시, 단어 강조 타이밍, 배경 위 가독성 (판정 미수령).** 사용자는 `pill-karaoke` 영상을 재생했고 "자막 이펙트가 다양한 영상 위에서 다양하게 보여야 한다"는 방향을 주었다

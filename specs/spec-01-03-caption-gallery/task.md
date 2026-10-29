@@ -37,9 +37,9 @@
 ## Task 3: 배경 선정
 
 ### 3-1. 후보 측정
-- [ ] 후보 블록 설치·렌더·YAVG 측정 (밝음, 중간 60~180, 어두움, 움직임 큼), 2초 블록의 반복 마운트가 동작하는지 smoke
-- [ ] `catalog/validation/backdrops.json` 작성
-- [ ] Commit: `feat(spec-01-03): select caption backdrops`
+- [x] 후보 블록 15개 설치·렌더·YAVG/YDIF 측정 (15/15 렌더 성공). 렌더 러너에 `--list` 옵션 추가 (기본 동작 불변). 2초 블록 반복 마운트 smoke 는 러너가 배경을 받는 Task 4 로 이동
+- [x] `catalog/validation/backdrops.json` 작성 + `tests/backdrops-list.test.mjs` (밝음/중간/어두움/움직임 큼 조건 고정). 선정: mk-background(209), data-chart(222), swirl(139, 2초 반복), gallery-tunnel(YDIF 10.4), canopy-part-title(27)
+- [x] Commit: `feat(spec-01-03): select caption backdrops`
 
 ---
 
@@ -47,6 +47,7 @@
 
 ### 4-1. 매트릭스 모드
 - [ ] `--all`, `--backdrops`, 조합 결과 누적·재개, 라벨·scrim 옵션
+- [ ] 2초 배경(swirl) 반복 마운트가 이음새 없이 동작하는지 smoke
 - [ ] `caption-styles.json` 16개로 확장, `--dry-run` 으로 레지스트리 확인
 - [ ] Commit: `feat(spec-01-03): add caption matrix mode`
 

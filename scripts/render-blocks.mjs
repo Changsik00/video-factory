@@ -3,6 +3,7 @@
 //   node scripts/render-blocks.mjs --dry-run          목록과 레지스트리 이름만 검증
 //   node scripts/render-blocks.mjs [--only=a,b] [--quality=draft] [--timeout=300]
 //   node scripts/render-blocks.mjs --only=x --variables='{"title":"안녕"}' --suffix=-ko
+//   node scripts/render-blocks.mjs --list=<목록.json> --suffix=-bd   (기본 목록: catalog/validation/blocks.json)
 // 실패는 그대로 기록한다. 모의 성공 결과를 만들지 않는다.
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -51,7 +52,7 @@ function visualStats(file) {
   return r.status === 0 ? parseSignalstats((r.stdout ?? '') + (r.stderr ?? '')) : undefined;
 }
 
-const list = JSON.parse(readFileSync(path.join(ROOT, 'catalog/validation/blocks.json'), 'utf8')).blocks;
+const list = JSON.parse(readFileSync(typeof args.list === 'string' ? path.resolve(args.list) : path.join(ROOT, 'catalog/validation/blocks.json'), 'utf8')).blocks;
 const only = typeof args.only === 'string' ? new Set(args.only.split(',')) : null;
 const targets = only ? list.filter((b) => only.has(b.name)) : list;
 if (targets.length === 0) {

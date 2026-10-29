@@ -77,13 +77,13 @@ spec-01-02에서 자막 컴포넌트 5개를 한국어 SRT로 렌더했고 블�
 ## Proposed Changes
 
 #### [MODIFY] `scripts/lib/captions-inject.mjs`, `tests/captions-inject.test.mjs`
-`hostHtml`에 `label`, `scrim`, 영상 파일 배경(`backdrop.video`) 추가. `W`/`BLOCKS` 구조 치환 함수 추가 (조사 결과에 따라).
+`hostHtml`에 `label`, `scrim`, 영상 파일 배경(`backdrop.video`) 추가. `W`/`BLOCKS` 구조 치환 함수 추가 (조사 결과에 따라). 매트릭스 1차 실행에서 `var GROUPS = [{wordStart,wordEnd,start,end}]` 객체 묶음과 `var KEYWORDS = new Set([...])`(숫자 인덱스/문자열) 하드코딩이 더 발견되어 함께 치환.
 
 #### [NEW] `scripts/lib/matrix.mjs`, `tests/matrix.test.mjs`, `tests/backdrops-list.test.mjs`
 조합 계획·이어서 실행·파일 이름·라벨(순수 함수)과 배경 목록 규칙 테스트.
 
 #### [MODIFY] `scripts/lib/diagnose.mjs`, `tests/diagnose.test.mjs`
-`parseYavg`, `backdropVerdict`: 배경이 중간에 사라진 렌더를 success 로 두지 않는다 (smoke 에서 거짓 성공 발견).
+`parseYavg`, `backdropVerdict`: 배경이 중간에 사라진 렌더를 success 로 두지 않는다 (smoke 에서 거짓 성공 발견). `summarizeCheck(json, scope)`: check 가 샌드박스 전체를 린트해 다른 조합 파일의 결과가 섞이므로 자막 파일/배경 파일/무관한 파일로 나눠 집계. `renderWarningCodes`, `hasScriptError`: exit 0 이어도 `script_error_isolated` 면 자막이 비므로 실패 처리. `inferReason`: 정상 로그의 "WebGL renderer" 문구가 gpu 로 오분류되던 규칙 수정, navigation_timeout·script_error 추가.
 
 #### [MODIFY] `scripts/render-blocks.mjs`
 `--list` 옵션 (배경 후보 측정에 재사용, 기본 동작 불변).

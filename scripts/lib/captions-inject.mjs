@@ -108,8 +108,24 @@ export function injectBlocks(html, blocks) {
 }
 
 // 컴포넌트 구조를 보고 알맞은 치환을 적용한다. 모르는 구조는 오류 (모의 성공 금지).
+//   - 단어 배열(WORDS/TRANSCRIPT/W), 묶음(RAW_GROUPS 쌍 / GROUPS 객체), 줄 배치(BLOCKS)
+//   - 강조 단어(KEYWORDS 집합: 숫자 인덱스 또는 문자열): 구간에서 가장 긴 단어로 대체 (임시 규칙)
 export function injectCaptions(html, cues) {
-  const out = injectWords(html, toWords(cues), cueGroups(cues));
+  const words = toWords(cues);
+  let out = injectWords(html, words, cueGroups(cues));
+
+  const groups = findLiteral(out, 'GROUPS');
+  if (groups && /wordStart/.test(out.slice(groups.start, groups.end))) {
+    const body = cueGroups(cues).map(([a, b], i) => `    { wordStart: ${a}, wordEnd: ${b}, start: ${cues[i].start}, end: ${cues[i].end} },`).join('\n');
+    out = `${out.slice(0, groups.start)}var GROUPS = [\n${body}\n  ];${out.slice(groups.end)}`;
+  }
+
+  const emph = emphasisIndexes(cues);
+  out = out.replace(/var KEYWORDS = new Set\(\[([^\]]*)\]\)/, (_, inner) =>
+    /^[\s\d,]*$/.test(inner)
+      ? `var KEYWORDS = new Set([${emph.join(', ')}])`
+      : `var KEYWORDS = new Set([${emph.map((i) => JSON.stringify(words[i].text.toLowerCase())).join(', ')}])`);
+
   const lit = findLiteral(out, 'BLOCKS');
   if (!lit) return out;
   const current = out.slice(lit.start, lit.end);

@@ -14,7 +14,7 @@ import { hostHtml, injectCaptions, readDuration } from './lib/captions-inject.mj
 import { comboKey, labelFor, outputName, planCombos } from './lib/matrix.mjs';
 import { parseSrt, toWords, validateCues } from './lib/srt.mjs';
 import { classify, metaMismatches } from './lib/summarize.mjs';
-import { assetCopies, backdropVerdict, compositionPath, inferReason, missingFromRegistry, parseSignalstats, parseYavg, summarizeCheck, tail, visualVerdict } from './lib/diagnose.mjs';
+import { assetCopies, backdropVerdict, compositionPath, hasScriptError, inferReason, missingFromRegistry, parseSignalstats, parseYavg, renderWarningCodes, summarizeCheck, tail, visualVerdict } from './lib/diagnose.mjs';
 
 const HF_VERSION = '0.8.206';
 const REGISTRY_INDEX = 'https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry/registry.json';
@@ -165,7 +165,7 @@ for (const combo of plan) {
 
       const check = hf(['check', '--json'], SANDBOX);
       let sum = null;
-      try { sum = summarizeCheck(JSON.parse(check.stdout)); } catch { /* JSON 이 아니면 요약 없음 */ }
+      try { sum = summarizeCheck(JSON.parse(check.stdout), { own: [`${combo.style}-ko.html`, 'index.html'], backdrop: bd?.src ? path.basename(bd.src) : null }); } catch { /* JSON 이 아니면 요약 없음 */ }
       record.check = sum ? { exit: check.status, ...sum } : { exit: check.status, summary: 'unparsed', raw: tail(check.stdout || check.stderr, 6) };
 
       const out = path.join('renders', outputName(combo));
@@ -173,12 +173,16 @@ for (const combo of plan) {
       let r = hf(renderArgs, SANDBOX);
       let attempts = 1;
       if (r.timedOut) { r = hf(renderArgs, SANDBOX); attempts = 2; } // 재시도는 타임아웃일 때만, 1회
-      Object.assign(record, { stage: 'render', attempts, ms: r.ms + check.ms, renderExit: r.status, output: out });
-      if (r.status === 0) {
+      const codes = renderWarningCodes(`${r.stdout}\n${r.stderr}`);
+      Object.assign(record, { stage: 'render', attempts, ms: r.ms + check.ms, renderExit: r.status, output: out, renderWarnings: codes });
+      if (r.status === 0 && hasScriptError(codes)) {
+        // exit 0 이어도 컴포지션 스크립트가 터져 자막이 비어 있다 (script_error_isolated): 성공으로 치지 않는다
+        Object.assign(record, { renderExit: 1, reason: 'script_error', log: tail(`${r.stdout}\n${r.stderr}`, 12) });
+      } else if (r.status === 0) {
         record.probe = probe(path.join(SANDBOX, out));
         const vs = visualStats(path.join(SANDBOX, out));
         record.visual = vs ? { ...vs, verdict: visualVerdict(vs) } : { verdict: 'unknown' };
-      } else Object.assign(record, { reason: inferReason(r.stderr, r), log: tail(r.stderr || r.stdout, 15) });
+      } else Object.assign(record, { reason: inferReason(`${r.stderr}\n${r.stdout}`, r), log: tail(r.stderr || r.stdout, 15) });
     } catch (e) {
       Object.assign(record, { stage: 'assemble', ms: 0, reason: 'assemble', log: String(e.message) });
     }

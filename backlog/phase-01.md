@@ -46,7 +46,7 @@ Video Factory는 Hypit / HyperFrames / FFmpeg 같은 기존 도구를 조합해 
 |---|---|:---:|---|---|
 | `spec-01-01` | hyperframes-blocks | P? | Merged | `specs/spec-01-01-hyperframes-blocks/` |
 | `spec-01-02` | caption-styles | P? | Merged | `specs/spec-01-02-caption-styles/` |
-| `spec-01-03` | caption-gallery | P? | Active | `specs/spec-01-03-caption-gallery/` |
+| `spec-01-03` | caption-gallery | P? | Merged | `specs/spec-01-03-caption-gallery/` |
 <!-- sdd:specs:end -->
 
 ### spec-1-01 — hyperframes-blocks

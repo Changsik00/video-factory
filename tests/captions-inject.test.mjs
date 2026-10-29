@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cueGroups, hostHtml, injectWords, readDuration } from '../scripts/lib/captions-inject.mjs';
+import { cueGroups, editorialBlocks, emphasisIndexes, hostHtml, injectBlocks, injectCaptions, injectWords, parallaxBlocks, readDuration } from '../scripts/lib/captions-inject.mjs';
 
 const words = [
   { id: 'w0', text: '가', start: 0, end: 1 },
@@ -150,4 +150,79 @@ test('hostHtml: 배경이 충분히 길면 한 번만 마운트한다', () => {
 test('hostHtml: duration 을 모르는 배경은 한 번만 마운트한다 (기존 동작)', () => {
   const html = hostHtml({ ...base, backdrop: { id: 'x', src: 'b.html' } });
   assert.equal([...html.matchAll(/data-composition-src="b.html"/g)].length, 1);
+});
+
+// --- spec-01-03: W/BLOCKS 구조 ---
+const cues2 = [
+  { index: 1, start: 0, end: 2, text: '이펙트 샘플을 보여드립니다' },
+  { index: 2, start: 3, end: 5, text: '안녕' },
+  { index: 3, start: 5, end: 7, text: '가 나나 다' },
+];
+
+test('emphasisIndexes: 구간마다 가장 긴 단어의 전체 인덱스를 고른다 (동률이면 앞쪽)', () => {
+  assert.deepEqual(emphasisIndexes(cues2), [2, 3, 5]);
+});
+
+test('editorialBlocks: 앞 절반(올림)은 line1, 나머지는 line2, 강조는 e', () => {
+  const b = editorialBlocks(cues2);
+  assert.deepEqual(b[0], { line1: [[0, 'n'], [1, 'n']], line2: [[2, 'e']] });
+});
+
+test('editorialBlocks: 단어 1개면 line1 만 있고 line2 는 null', () => {
+  assert.deepEqual(editorialBlocks(cues2)[1], { line1: [[3, 'e']], line2: null });
+});
+
+test('editorialBlocks: 모든 단어 인덱스가 한 번씩 나온다', () => {
+  const idx = editorialBlocks(cues2).flatMap((b) => [...b.line1, ...(b.line2 ?? [])].map((p) => p[0]));
+  assert.deepEqual(idx.sort((a, b) => a - b), [0, 1, 2, 3, 4, 5, 6]);
+});
+
+test('parallaxBlocks: 강조 단어는 behind, 나머지는 front', () => {
+  assert.deepEqual(parallaxBlocks(cues2)[0], { behind: [[2]], front: [[0], [1]] });
+});
+
+test('parallaxBlocks: 단어 1개면 behind 만, front 는 null', () => {
+  assert.deepEqual(parallaxBlocks(cues2)[1], { behind: [[3]], front: null });
+});
+
+test('injectWords: var W 배열도 치환한다 (var WORDS 와 혼동하지 않는다)', () => {
+  const html = 'var WORDS_X = 1;\nvar W = [\n { text: "Every", start: 0, end: 1 },\n];\nvar BLOCKS = [];';
+  const out = injectWords(html, words, []);
+  assert.match(out, /var W = \[[\s\S]*text: "가"/);
+  assert.match(out, /var WORDS_X = 1;/);
+});
+
+test('injectBlocks: var BLOCKS 리터럴을 치환하고 뒤의 코드는 둔다', () => {
+  const html = 'var BLOCKS = [\n  { a: [[0, "n"]] },\n];\nvar CLASS_MAP = {};';
+  const out = injectBlocks(html, [{ line1: [[0, 'e']], line2: null }]);
+  assert.match(out, /var BLOCKS = \[\s*\{ "line1": \[\[0, "e"\]\], "line2": null \},?\s*\];/);
+  assert.match(out, /var CLASS_MAP = \{\};/);
+});
+
+test('injectBlocks: BLOCKS 가 없으면 오류', () => {
+  assert.throws(() => injectBlocks('<p></p>', []), /BLOCKS/);
+});
+
+test('injectCaptions: WORDS 구조는 단어와 RAW_GROUPS 를 치환한다', () => {
+  const out = injectCaptions(WORDS_HTML, cues2);
+  assert.match(out, /text: "이펙트"/);
+  assert.match(out, /var RAW_GROUPS = \[\s*\[0, 2\],\s*\[3, 3\],\s*\[4, 6\],?\s*\];/);
+});
+
+test('injectCaptions: line1/line2 BLOCKS 구조는 editorial 블록을 넣는다', () => {
+  const html = 'var W = [\n { text: "a", start: 0, end: 1 },\n];\nvar BLOCKS = [\n { line1: [[0, "n"]], line2: null },\n];';
+  const out = injectCaptions(html, cues2);
+  assert.match(out, /"line1": \[\[0, "n"\], \[1, "n"\]\]/);
+  assert.match(out, /text: "이펙트"/);
+});
+
+test('injectCaptions: behind/front BLOCKS 구조는 parallax 블록을 넣는다', () => {
+  const html = 'var W = [\n { text: "a", start: 0, end: 1 },\n];\nvar BLOCKS = [\n { behind: null, front: [[0]] },\n];';
+  const out = injectCaptions(html, cues2);
+  assert.match(out, /"behind": \[\[2\]\]/);
+});
+
+test('injectCaptions: BLOCKS 모양을 모르면 오류 (모의 성공 금지)', () => {
+  const html = 'var W = [\n { text: "a", start: 0, end: 1 },\n];\nvar BLOCKS = [\n { foo: 1 },\n];';
+  assert.throws(() => injectCaptions(html, cues2), /BLOCKS/);
 });

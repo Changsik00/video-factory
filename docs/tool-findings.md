@@ -258,3 +258,22 @@ node scripts/build-reel.mjs [--per-style=2] [--exclude=키,키]       # 모음 �
 ### 판단
 - 벡터 PDF 는 가능하다. 단 **"같은 HTML 을 그대로 인쇄"가 아니라 "같은 장면 파일에서 인쇄용 페이지를 생성"** 이다.
 - 이 덱은 글자·색만 쓴다. 이미지·영상·3D(WebGL) 요소가 있는 장면은 인쇄 결과를 확인하지 않았다.
+
+## YouTube 업로드 제약 (spec-01-04 V5, 2026-10-30, 문서 조사만)
+
+**업로드는 하지 않았다.** 공식 문서 웹 조회와 2차 자료 기준이다 (직접 API 를 호출하지 않았다).
+
+### 공식 문서로 확인 ([videos.insert](https://developers.google.com/youtube/v3/docs/videos/insert), 페이지 갱신일 2026-10-15)
+- OAuth 범위: `youtube.upload`, `youtube`, `youtubepartner`, `youtube.force-ssl` 중 하나. 파일 최대 256GB, MIME `video/*`.
+- 할당량 문서의 기본 한도: 일 10,000 유닛(그 외 엔드포인트 합산), `videos.insert` 일 100회. 한도를 늘리려면 **먼저 컴플라이언스 감사**를 통과해야 한다 ([quota and compliance audits](https://developers.google.com/youtube/v3/guides/quota_and_compliance_audits)).
+- `privacyStatus` 를 지정하지 않으면 `public` 이 기본이고, 계정 설정에 따라 `private` 이 기본이 될 수 있다.
+
+### 문서끼리 충돌하는 부분 (**결론 못 냄**)
+- 현재 `videos.insert` 페이지는 "미검증(unverified) API 프로젝트에서 올린 영상은 비공개로 제한되지 않는다"고 적고 있다.
+- 2020-07-29 개정 내역(2차 자료로 확인)은 "2020-07-28 이후 만든 미검증 프로젝트의 `videos.insert` 영상은 비공개로 제한"이라고 했고, 감사를 통과해야 풀린다. 호출은 실패하지 않고 조용히 비공개로 잠긴다는 보고가 있다. GitHub 이슈에는 감사를 신청했는데도 잠겨 있다는 사례, 할당량 증가를 선택하니 풀렸다는 사례가 섞여 있다 ([이슈](https://github.com/porjo/youtubeuploader/issues/86)).
+- **어느 쪽이 현재 사실인지는 실제 업로드해 보기 전에는 알 수 없다.** 업로드는 사용자 승인이 필요한 외부 게시이므로 이 spec 에서 하지 않았다.
+
+### 설계에 주는 의미
+- 업로드 후 응답의 `status.privacyStatus` 를 다시 읽어 요청한 값과 같은지 검사해야 한다. 비공개로 잠기면 감사 신청 또는 YouTube Studio 에서 수동 공개가 필요하다.
+- 한 번 업로드에 OAuth 동의 화면 설정, 프로젝트 등록이 필요하다. 개인 채널 1개에 올리는 정도라면 기본 한도(일 100회)는 충분해 보인다 (추정).
+- 게시 단계는 계속 사용자 승인 뒤에만 한다.

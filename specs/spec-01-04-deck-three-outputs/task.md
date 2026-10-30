@@ -63,8 +63,8 @@
 
 ## Task 6: V5 — YouTube 업로드 제약 조사 (문서만)
 
-- [ ] 공식 문서 기준: API 승인·감사, 미심사 프로젝트의 공개 범위, 할당량. 확인 못 한 것은 미확인
-- [ ] Commit: `docs(spec-01-04): record youtube upload constraints`
+- [x] 공식 문서 기준: API 승인·감사, 미심사 프로젝트의 공개 범위, 할당량. 확인 못 한 것은 미확인 (공개 범위 규칙은 공식 문서끼리 충돌, 결론 못 냄)
+- [x] Commit: `docs(spec-01-04): record youtube upload constraints`
 
 ---
 

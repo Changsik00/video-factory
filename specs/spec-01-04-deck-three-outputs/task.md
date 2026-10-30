@@ -22,7 +22,7 @@
 
 - [x] `runs/phase-01/deck/` 에 3장 덱(fragment 2개 포함) 작성, `check --json` 통과 (처음 구조는 `check` 를 통과했지만 `present` 에서 동작하지 않아 루트+장면 파일 구조로 수정)
 - [x] `present --no-open` 으로 서버 실행, 헤드리스 Chrome(CDP 키 이벤트)으로 진행·fragment 확인과 스크린샷 확인. 전환 애니메이션·청중 화면 동기화는 미확인
-- [ ] 키 입력 체감 등 자동화 불가 항목은 **사용자 확인 요청** 후 결과 기록 (받지 못하면 미확인) — 요청 대기, 미수령
+- [-] 키 입력 체감 등 자동화 불가 항목은 **사용자 확인 요청** 후 결과 기록 (받지 못하면 미확인) — **미수령, 이월** (자동화 키 입력 검증은 완료)
 - [x] 결과를 `docs/tool-findings.md` 에 초안 기록
 - [x] Commit: `docs(spec-01-04): record present deck findings`
 
@@ -48,14 +48,14 @@
 ## Task 5: V4 — 명세에서 덱·영상용 HTML 생성 (V2 결과가 "불가"일 때만)
 
 ### 5-1. 테스트 작성 (TDD Red)
-- [ ] `tests/deck-manifest.test.mjs`: 명세 검증(슬라이드 수, fragment 시간 순서), 덱 JSON 과 영상용 장면 시간 생성
-- [ ] 테스트 실행 → Fail 확인
-- [ ] Commit: `test(spec-01-04): add failing tests for deck manifest`
+- [-] `tests/deck-manifest.test.mjs`: 명세 검증(슬라이드 수, fragment 시간 순서), 덱 JSON 과 영상용 장면 시간 생성
+- [-] 테스트 실행 → Fail 확인
+- [-] Commit: `test(spec-01-04): add failing tests for deck manifest`
 
 ### 5-2. 구현 (TDD Green)
-- [ ] `scripts/lib/deck-manifest.mjs` 구현, 생성 결과를 렌더·`present` 로 확인
-- [ ] `npm test` → Pass 확인
-- [ ] Commit: `feat(spec-01-04): add minimal deck manifest generator`
+- [-] `scripts/lib/deck-manifest.mjs` 구현, 생성 결과를 렌더·`present` 로 확인
+- [-] `npm test` → Pass 확인
+- [-] Commit: `feat(spec-01-04): add minimal deck manifest generator`
 
 (V2 가 "공유 가능"이면 건너뛰고 사유를 task 에 기록) — **V2 결과 공유 가능(루트 구조), V3 에서 인쇄용 페이지 생성이 필요함을 확인. 생성기 저장소화(TDD)는 이번 spec 에서 하지 않고 이월**
 
@@ -79,11 +79,11 @@
 ## Task N: Ship (필수)
 
 ### 🚦 Pre-Push Quality Gate
-- [ ] **전체 테스트 실행** → 모두 PASS
+- [x] **전체 테스트 실행** → 모두 PASS (141개)
 
 ### 📝 산출물 작성
-- [ ] **walkthrough.md 작성**
-- [ ] **pr_description.md 작성**
+- [x] **walkthrough.md 작성**
+- [x] **pr_description.md 작성**
 - [ ] Commit: `docs(spec-01-04): ship walkthrough and pr description`
 
 ### 🚀 Push & PR

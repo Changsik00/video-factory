@@ -8,7 +8,7 @@
 ## 📦 진행 중 Phase
 
 <!-- sdd:active:start -->
-- **phase-01** — tool-validation — 4 spec — 다음: spec-01-04-deck-three-outputs
+- **phase-01** — tool-validation — 4 spec — 다음: (spec 없음)
 <!-- sdd:active:end -->
 
 ## 📥 spec-x 대기

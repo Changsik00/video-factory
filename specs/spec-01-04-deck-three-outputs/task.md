@@ -11,10 +11,10 @@
 - [x] `git checkout -b spec-01-04-deck-three-outputs` (spec 생성 직후 생성됨)
 
 ### 1-2. 설치 (사용자 확인 필수)
-- [ ] **설치 직전 사용자 확인** (파일 추가, `skills-lock.json` 변경 내용 안내)
-- [ ] 스킬 설치 후 `.claude/skills/slideshow/SKILL.md` 를 읽고 키 조작·fragment·전환에 관한 서술을 기록 (문서와 실측의 차이는 이후 task 에서 확인)
-- [ ] `skills-lock.json` 해시, `docs/project-principles.md` 스킬 목록·검토일 갱신
-- [ ] Commit: `chore(spec-01-04): install slideshow skill`
+- [x] **설치 직전 사용자 확인** (파일 추가, `skills-lock.json` 변경 내용 안내) — 승인 받음
+- [x] 스킬 설치 후 `.claude/skills/slideshow/SKILL.md` 를 읽고 키 조작·fragment·전환에 관한 서술을 기록 (문서와 실측의 차이는 이후 task 에서 확인)
+- [x] `docs/project-principles.md` 갱신. **`skills-lock.json` 은 변경하지 않음** (CLI 가 홈에 4개를 설치해 media-use 포함분을 지우고 홈 설치본을 프로젝트로 복사. `computedHash` 계산법을 몰라 파일 SHA-256 을 principles 에 기록)
+- [x] Commit: `chore(spec-01-04): install slideshow skill`
 
 ---
 

@@ -21,6 +21,7 @@ Video Factory에 한정된 원칙. 일반 SDD 절차(Plan Accept, TDD, 브랜치
 
 ## HyperFrames 스킬 사용 규칙
 `.claude/skills/`의 `hyperframes`, `hyperframes-cli`, `hyperframes-registry`는 `skills-lock.json`의 해시로 고정한다 (2026-10-28 검토 기준). 스킬 지시와 이 문서가 충돌하면 이 문서가 우선한다.
+`slideshow`는 spec-01-04(2026-10-30)에서 추가했다. `hyperframes skills update slideshow` 가 프로젝트가 아니라 홈 디렉터리에 설치하고 이름을 지정해도 4개를 설치해서, 홈 설치본을 `.claude/skills/slideshow/` 로 복사한 뒤 홈 쪽 설치분은 모두 지웠다 (`media-use` 포함, 설치하지 않는다). `skills-lock.json` 의 `computedHash` 계산법을 몰라 **lock 에는 넣지 않았다.** 대신 파일 SHA-256 으로 고정한다: `SKILL.md` `4525f1a0d468f91957b638f14599c37f4af5e00c9b3c4df519a1cbe16101c908`, `references/standalone-harness.md` `0f12d69a9c05a801291d923c7b1dbe666b29f3b68f6bb73d7c80681ae09df7e9` (GitHub main 기준 설치본, 고정 CLI 0.8.206 과의 일치는 미확인). `HYPERFRAMES_SKIP_SKILLS=1` 은 그대로 둔다.
 - CLI는 `npx hyperframes@0.8.206`으로 고정해 호출한다. `skills update`, `upgrade`는 spec 없이 실행하지 않는다.
 - 텔레메트리·업데이트 확인은 `.claude/settings.json`의 `env`로 끈다. 렌더 후 `feedback` 전송도 하지 않는다.
 - `publish`, `cloud`, `lambda`, `cloudrun`, `usage` 등 외부로 나가는 명령은 사용자가 요청할 때만 쓴다.

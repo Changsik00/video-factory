@@ -20,11 +20,11 @@
 
 ## Task 2: V1 — `present` 덱 시험
 
-- [ ] `runs/phase-01/deck/` 에 3장 덱(fragment 2개 이상 포함) 작성, `check --json` 통과
-- [ ] `present --no-open` 으로 서버 실행, 헤드리스 Chrome 으로 가능한 확인(진행·fragment·전환·청중 화면)을 하고 스냅샷 확인
-- [ ] 키 입력 체감 등 자동화 불가 항목은 **사용자 확인 요청** 후 결과 기록 (받지 못하면 미확인)
-- [ ] 결과를 `docs/tool-findings.md` 에 초안 기록
-- [ ] Commit: `docs(spec-01-04): record present deck findings`
+- [x] `runs/phase-01/deck/` 에 3장 덱(fragment 2개 포함) 작성, `check --json` 통과 (처음 구조는 `check` 를 통과했지만 `present` 에서 동작하지 않아 루트+장면 파일 구조로 수정)
+- [x] `present --no-open` 으로 서버 실행, 헤드리스 Chrome(CDP 키 이벤트)으로 진행·fragment 확인과 스크린샷 확인. 전환 애니메이션·청중 화면 동기화는 미확인
+- [ ] 키 입력 체감 등 자동화 불가 항목은 **사용자 확인 요청** 후 결과 기록 (받지 못하면 미확인) — 요청 대기, 미수령
+- [x] 결과를 `docs/tool-findings.md` 에 초안 기록
+- [x] Commit: `docs(spec-01-04): record present deck findings`
 
 ---
 

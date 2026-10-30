@@ -200,3 +200,26 @@ node scripts/build-reel.mjs [--per-style=2] [--exclude=키,키]       # 모음 �
 - 영상 전체 구간 재생 확인, 단어별 타이밍 이펙트가 의도대로 나오는지
 - `emoji-pop` 실패 원인, 다른 OS·컨테이너에서의 한글 폰트 모양
 - 세로(portrait), 긴 문장·3줄 이상, 영상(`<video>`) 위 자막의 실사용 확인
+
+## HyperFrames — 덱 `present` (spec-01-04 V1, 2026-10-30, 초안)
+
+### 환경·절차
+`hyperframes@0.8.206`, `slideshow` 스킬은 GitHub main 기준 설치본(고정 CLI 와의 일치 미확인). 3장 덱(슬라이드 2에 fragment 7.0s, 10.0s)을 `runs/phase-01/deck/`(git 제외)에 만들고 `check --json` 통과 후 `present --no-open` 으로 띄웠다. 헤드리스 Chrome(`hyperframes browser path`)을 CDP 로 조종해 **실제 키 이벤트**를 넣고 스크린샷을 찍었다 (스크립트는 scratchpad, 저장소에 넣지 않음).
+
+### 확인한 것 (실측)
+- `present` 는 로컬 서버(포트 3004)를 띄우고 `<hyperframes-slideshow>` 컴포넌트로 덱을 감싼 페이지를 서빙한다. 외부 게시 아님.
+- **ArrowRight/Space = 다음, ArrowLeft/Backspace = 이전**, F = 전체 화면, P = 발표자→청중 화면. 컴포넌트 소스(`/slideshow.js`)에서 확인했고 CDP 키 입력으로 ArrowRight, ArrowLeft, Space 를 실제로 눌러 동작을 확인했다 (Backspace, F, P 는 코드 확인만).
+- 진행 순서: 슬라이드 1 → 슬라이드 2 의 첫 fragment 상태(항목 2개) → 두 번째 fragment 상태(항목 3개) → 슬라이드 3. 마지막에서 ArrowRight 는 멈춘다. ArrowLeft 는 직전 상태로 돌아간다. 카운터(`n / 3`)는 슬라이드 수이고 fragment 단계는 세지 않는다.
+- **fragment 가 있는 슬라이드는 첫 fragment 시각에서 진입한다** (진입 직후 이미 그 시각까지의 항목이 보인다). 항목을 하나씩 보이려면 fragment 를 항목 수만큼 두어야 한다. fragment 가 없는 슬라이드는 "rest frame" 에서 진입한다 (문서 서술과 일치).
+- 슬라이드 사이 화면은 정지 프레임으로 보면 즉시 전환(컷)처럼 보인다. 전환 애니메이션이 있는지는 확인하지 못했다 (정지 이미지 기준).
+
+### 발견한 문제 (덱 작성 시)
+1. **한 파일에 최상위 장면 3개를 직접 넣는 구조는 동작하지 않았다.** 스킬 문서의 "마스터 루트 없음" 서술을 따랐는데, CLI 가 첫 컴포지션만 읽어 길이가 4초(전체 16초)로 나왔고 `present` 에서 `unresolved sceneId` 오류, 장면 3개가 동시에 보이며 키를 눌러도 `1 / 3` 에서 움직이지 않았다.
+2. **루트(`data-composition-id="main"`) + 장면 파일 마운트(`data-composition-src`, 각 파일은 `<template>`)** 구조로 바꾸자 길이 16초, 정상 진행했다. 고정 가이드(`format.md`)의 표준 구조다.
+3. **`check --json` 은 1번의 깨진 구조도 통과시켰다** (`ok: true`, 지적 없음). 덱 구성 오류는 `present` 를 실제로 띄워 콘솔(`[hyperframes-slideshow] manifest errors`)과 키 진행으로 확인해야 한다. 첫 `check` 는 한글 폰트(`Apple SD Gothic Neo`)에 `@font-face` 가 없어 오류였다 (`src: local(...)` 로 해결, 이 환경에서 반복되는 지적).
+4. 컴포넌트가 `/composition/sfx/{advance,fragment,branch-enter,back}.mp3` 를 요청해 404 가 난다 (소리 파일이 없음, 화면 진행에는 영향 없음으로 보임).
+
+### 미확인
+- 청중 화면 동기화(P 키, 두 번째 탭), 발표자 노트 표시, 핫스팟 분기
+- 사용자가 직접 브라우저에서 눌러 보는 체감 확인 (**사용자 확인 요청 대기**)
+- 슬라이드 전환 애니메이션의 유무

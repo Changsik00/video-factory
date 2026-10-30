@@ -57,7 +57,7 @@
 - [ ] `npm test` → Pass 확인
 - [ ] Commit: `feat(spec-01-04): add minimal deck manifest generator`
 
-(V2 가 "공유 가능"이면 건너뛰고 사유를 task 에 기록) — **V2 결과 공유 가능(루트 구조). 이 task 는 건너뜀 예정, V3 후 최종 판단**
+(V2 가 "공유 가능"이면 건너뛰고 사유를 task 에 기록) — **V2 결과 공유 가능(루트 구조), V3 에서 인쇄용 페이지 생성이 필요함을 확인. 생성기 저장소화(TDD)는 이번 spec 에서 하지 않고 이월**
 
 ---
 
@@ -70,9 +70,9 @@
 
 ## Task 7: 결과 반영
 
-- [ ] `docs/tool-findings.md` 정리 (확인한 것/못 한 것)
-- [ ] ADR-003, ADR-004, `docs/plan/multi-format-presentation-plan.md` 를 결과에 맞게 수정 (틀린 가설은 틀렸다고 기록)
-- [ ] Commit: `docs(spec-01-04): update adr and plan with deck findings`
+- [x] `docs/tool-findings.md` 정리 (확인한 것/못 한 것)
+- [x] ADR-003, ADR-004, `docs/plan/multi-format-presentation-plan.md` 를 결과에 맞게 수정 (ADR-003 결정 2 와 PDF 방법 수정)
+- [x] Commit: `docs(spec-01-04): update adr and plan with deck findings`
 
 ---
 

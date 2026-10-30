@@ -200,3 +200,80 @@ node scripts/build-reel.mjs [--per-style=2] [--exclude=키,키]       # 모음 �
 - 영상 전체 구간 재생 확인, 단어별 타이밍 이펙트가 의도대로 나오는지
 - `emoji-pop` 실패 원인, 다른 OS·컨테이너에서의 한글 폰트 모양
 - 세로(portrait), 긴 문장·3줄 이상, 영상(`<video>`) 위 자막의 실사용 확인
+
+## HyperFrames — 덱 `present` (spec-01-04 V1, 2026-10-30, 초안)
+
+### 환경·절차
+`hyperframes@0.8.206`, `slideshow` 스킬은 GitHub main 기준 설치본(고정 CLI 와의 일치 미확인). 3장 덱(슬라이드 2에 fragment 7.0s, 10.0s)을 `runs/phase-01/deck/`(git 제외)에 만들고 `check --json` 통과 후 `present --no-open` 으로 띄웠다. 헤드리스 Chrome(`hyperframes browser path`)을 CDP 로 조종해 **실제 키 이벤트**를 넣고 스크린샷을 찍었다 (스크립트는 scratchpad, 저장소에 넣지 않음).
+
+### 확인한 것 (실측)
+- `present` 는 로컬 서버(포트 3004)를 띄우고 `<hyperframes-slideshow>` 컴포넌트로 덱을 감싼 페이지를 서빙한다. 외부 게시 아님.
+- **ArrowRight/Space = 다음, ArrowLeft/Backspace = 이전**, F = 전체 화면, P = 발표자→청중 화면. 컴포넌트 소스(`/slideshow.js`)에서 확인했고 CDP 키 입력으로 ArrowRight, ArrowLeft, Space 를 실제로 눌러 동작을 확인했다 (Backspace, F, P 는 코드 확인만).
+- 진행 순서: 슬라이드 1 → 슬라이드 2 의 첫 fragment 상태(항목 2개) → 두 번째 fragment 상태(항목 3개) → 슬라이드 3. 마지막에서 ArrowRight 는 멈춘다. ArrowLeft 는 직전 상태로 돌아간다. 카운터(`n / 3`)는 슬라이드 수이고 fragment 단계는 세지 않는다.
+- **fragment 가 있는 슬라이드는 첫 fragment 시각에서 진입한다** (진입 직후 이미 그 시각까지의 항목이 보인다). 항목을 하나씩 보이려면 fragment 를 항목 수만큼 두어야 한다. fragment 가 없는 슬라이드는 "rest frame" 에서 진입한다 (문서 서술과 일치).
+- 슬라이드 사이 화면은 정지 프레임으로 보면 즉시 전환(컷)처럼 보인다. 전환 애니메이션이 있는지는 확인하지 못했다 (정지 이미지 기준).
+
+### 발견한 문제 (덱 작성 시)
+1. **한 파일에 최상위 장면 3개를 직접 넣는 구조는 동작하지 않았다.** 스킬 문서의 "마스터 루트 없음" 서술을 따랐는데, CLI 가 첫 컴포지션만 읽어 길이가 4초(전체 16초)로 나왔고 `present` 에서 `unresolved sceneId` 오류, 장면 3개가 동시에 보이며 키를 눌러도 `1 / 3` 에서 움직이지 않았다.
+2. **루트(`data-composition-id="main"`) + 장면 파일 마운트(`data-composition-src`, 각 파일은 `<template>`)** 구조로 바꾸자 길이 16초, 정상 진행했다. 고정 가이드(`format.md`)의 표준 구조다.
+3. **`check --json` 은 1번의 깨진 구조도 통과시켰다** (`ok: true`, 지적 없음). 덱 구성 오류는 `present` 를 실제로 띄워 콘솔(`[hyperframes-slideshow] manifest errors`)과 키 진행으로 확인해야 한다. 첫 `check` 는 한글 폰트(`Apple SD Gothic Neo`)에 `@font-face` 가 없어 오류였다 (`src: local(...)` 로 해결, 이 환경에서 반복되는 지적).
+4. 컴포넌트가 `/composition/sfx/{advance,fragment,branch-enter,back}.mp3` 를 요청해 404 가 난다 (소리 파일이 없음, 화면 진행에는 영향 없음으로 보임).
+
+### 미확인
+- 청중 화면 동기화(P 키, 두 번째 탭), 발표자 노트 표시, 핫스팟 분기
+- 사용자가 직접 브라우저에서 눌러 보는 체감 확인 (**사용자 확인 요청 대기**)
+- 슬라이드 전환 애니메이션의 유무
+
+## HyperFrames — 덱 렌더 (spec-01-04 V2, 2026-10-30, 초안)
+
+문서(`slideshow` 스킬): "덱을 MP4 로 렌더하지 마라. `render` 는 첫 장면만 남기고 조용히 잘라 버린다."
+
+### 실측 (draft, 같은 3장 내용, 각 1회)
+| 구조 | `render` 결과 |
+|---|---|
+| 최상위 장면 3개를 한 파일에 직접 둠 (스킬 문서의 "마스터 루트 없음" 서술대로) | **4.0초** (장면 1개 길이). 문서의 "첫 장면만 남음"을 **재현**했다. 오류 없이 종료 |
+| 루트 `main`(16초) + 장면 3개를 `data-composition-src` 로 마운트 (표준 구조, `present` 도 동작하는 구조) | **16.0초**, 1920x1080 h264, 약 21초. 프레임 5장(1.5, 5, 8, 11, 13.5초)으로 장면 순서와 항목 등장 시점이 타임라인과 일치함을 확인 |
+
+- **"덱을 렌더할 수 없다"가 아니라 "루트 없는 구조는 첫 장면만 남는다"로 보인다.** 루트를 두면 같은 파일이 `present`(키 진행)와 `render`(MP4)에 모두 쓰였다. 슬라이드용 JSON(`application/hyperframes-slideshow+json`)은 렌더에 영향을 주지 않았다.
+- MP4 는 fragment 에서 멈추지 않고 타임라인을 연속 재생한다. 발표용 "정지"와 영상용 "시간"이 같은 타임라인 위의 서로 다른 읽기 방식이다.
+- 범위: 이 결과는 소리·핫스팟·분기 슬라이드가 없는 최소 덱 하나에서 얻었다. 분기 슬라이드(`slideSequences` 전용 장면)가 있으면 영상에 어떻게 들어가는지, 소리가 있을 때 문서의 경고가 다른 이유로 맞는지는 확인하지 못했다.
+
+## HyperFrames — 덱 PDF (spec-01-04 V3, 2026-10-30, 초안)
+
+같은 3장 덱에서 슬라이드의 **최종 상태**를 PDF 로 냈다 (각 방식 1회).
+
+| 방식 | 결과 | 글자 선택 | 비고 |
+|---|---|---|---|
+| (a) `snapshot --at 3.5,11.5,15` PNG → PDF (PIL) | 3쪽, 1440x810pt | **불가** (`pdftotext` 0자) | 이미지 PDF. `snapshot --at` 은 요청하지 않은 **영상 끝 프레임(15.52s)을 한 장 더** 만들고 `contact-sheet.jpg` 도 같이 쓴다. 쪽 수를 맞추려면 걸러야 함 |
+| (b) 인쇄용 HTML → 헤드리스 Chrome `Page.printToPDF` | 3쪽, 1440x810pt (1920x1080px, `@page` 크기 지정) | **가능** (231자 추출, 한글 포함, 글꼴 `AppleSDGothicNeo` 임베드) | 벡터 PDF. 쪽마다 최종 상태(항목 3개 모두 보임)를 프레임으로 확인 |
+
+### (b) 인쇄용 HTML 을 만든 방법
+기존 장면 파일(`compositions/*.html`)의 스타일·본문·스크립트를 **그대로 재사용**했다. 영상용 HTML 을 그대로 인쇄하는 것이 아니라 인쇄용 페이지를 따로 생성한다.
+1. 장면 파일마다 `<template>` 을 벗기고 `#root`/`id="root"` 를 장면별 id 로 바꿔 충돌을 피한다 (장면마다 `#root` 를 쓰기 때문).
+2. 장면 스크립트를 즉시 실행 함수로 감싼다 (각 파일이 `const tl` 을 전역에 선언해 충돌하기 때문).
+3. 페이지 시작 전에 `window.__timelines = {}` 를 선언한다. 런타임이 없는 환경이라 없으면 장면 스크립트가 등록 단계에서 예외를 내고, `fromTo` 는 이미 초기 상태(투명)를 적용해 **글자가 투명한 PDF**가 나왔다 (처음 시도, 텍스트 45자만 추출됨).
+4. 로드 후 모든 타임라인을 `progress(1)` 로 끝까지 보내 최종 상태를 만든 뒤 인쇄한다.
+- 스크립트(생성기·인쇄 드라이버)는 scratchpad 에 있고 **저장소에 넣지 않았다.** 장면 파일이 지켜야 할 규칙(전역 `const` 금지 등)이 생겼다.
+
+### 판단
+- 벡터 PDF 는 가능하다. 단 **"같은 HTML 을 그대로 인쇄"가 아니라 "같은 장면 파일에서 인쇄용 페이지를 생성"** 이다.
+- 이 덱은 글자·색만 쓴다. 이미지·영상·3D(WebGL) 요소가 있는 장면은 인쇄 결과를 확인하지 않았다.
+
+## YouTube 업로드 제약 (spec-01-04 V5, 2026-10-30, 문서 조사만)
+
+**업로드는 하지 않았다.** 공식 문서 웹 조회와 2차 자료 기준이다 (직접 API 를 호출하지 않았다).
+
+### 공식 문서로 확인 ([videos.insert](https://developers.google.com/youtube/v3/docs/videos/insert), 페이지 갱신일 2026-10-15)
+- OAuth 범위: `youtube.upload`, `youtube`, `youtubepartner`, `youtube.force-ssl` 중 하나. 파일 최대 256GB, MIME `video/*`.
+- 할당량 문서의 기본 한도: 일 10,000 유닛(그 외 엔드포인트 합산), `videos.insert` 일 100회. 한도를 늘리려면 **먼저 컴플라이언스 감사**를 통과해야 한다 ([quota and compliance audits](https://developers.google.com/youtube/v3/guides/quota_and_compliance_audits)).
+- `privacyStatus` 를 지정하지 않으면 `public` 이 기본이고, 계정 설정에 따라 `private` 이 기본이 될 수 있다.
+
+### 문서끼리 충돌하는 부분 (**결론 못 냄**)
+- 현재 `videos.insert` 페이지는 "미검증(unverified) API 프로젝트에서 올린 영상은 비공개로 제한되지 않는다"고 적고 있다.
+- 2020-07-29 개정 내역(2차 자료로 확인)은 "2020-07-28 이후 만든 미검증 프로젝트의 `videos.insert` 영상은 비공개로 제한"이라고 했고, 감사를 통과해야 풀린다. 호출은 실패하지 않고 조용히 비공개로 잠긴다는 보고가 있다. GitHub 이슈에는 감사를 신청했는데도 잠겨 있다는 사례, 할당량 증가를 선택하니 풀렸다는 사례가 섞여 있다 ([이슈](https://github.com/porjo/youtubeuploader/issues/86)).
+- **어느 쪽이 현재 사실인지는 실제 업로드해 보기 전에는 알 수 없다.** 업로드는 사용자 승인이 필요한 외부 게시이므로 이 spec 에서 하지 않았다.
+
+### 설계에 주는 의미
+- 업로드 후 응답의 `status.privacyStatus` 를 다시 읽어 요청한 값과 같은지 검사해야 한다. 비공개로 잠기면 감사 신청 또는 YouTube Studio 에서 수동 공개가 필요하다.
+- 한 번 업로드에 OAuth 동의 화면 설정, 프로젝트 등록이 필요하다. 개인 채널 1개에 올리는 정도라면 기본 한도(일 100회)는 충분해 보인다 (추정).
+- 게시 단계는 계속 사용자 승인 뒤에만 한다.

@@ -277,3 +277,50 @@ node scripts/build-reel.mjs [--per-style=2] [--exclude=키,키]       # 모음 �
 - 업로드 후 응답의 `status.privacyStatus` 를 다시 읽어 요청한 값과 같은지 검사해야 한다. 비공개로 잠기면 감사 신청 또는 YouTube Studio 에서 수동 공개가 필요하다.
 - 한 번 업로드에 OAuth 동의 화면 설정, 프로젝트 등록이 필요하다. 개인 채널 1개에 올리는 정도라면 기본 한도(일 100회)는 충분해 보인다 (추정).
 - 게시 단계는 계속 사용자 승인 뒤에만 한다.
+
+## 블록·컴포넌트 라이선스·작성자와 크레딧 방침 (phase-01 마감, 2026-10-31)
+
+phase-01 성공 기준 4. 레지스트리(`heygen-com/hyperframes` main)의 항목별 `registry-item.json` 448개(블록 210, 컴포넌트 238)를 전부 내려받아 집계했다 (읽기 전용, 오류 0건). 법률 검토가 아니다. main 브랜치를 읽으므로 시점이 바뀌면 달라질 수 있다 (ADR-002).
+
+### 필드 현황
+| 구분 | 항목 수 | `license` 있음 | `author` 있음 |
+|---|---:|---|---:|
+| 블록 | 210 | `Apache-2.0 AND MIT` 36, `Apache-2.0` 1, `OFL-1.1` 1 (나머지 172개는 **비어 있음**) | 40 |
+| 컴포넌트 | 238 | `MIT` 1, `MIT AND OFL-1.1` 1 (나머지 236개는 **비어 있음**) | 10 |
+
+- `author` 값(블록): Jake Moran 27, Miao Yang 5, Stronkter 4, HeyGen 2, Tugra Avci 1, Joe Sai 1. `authorUrl` 은 항목 7개에만 있다.
+- 필드가 비어 있다는 것이 "라이선스 없음"을 뜻하는지 저장소 라이선스(Apache-2.0)가 적용된다는 뜻인지는 **확인하지 못했다** (항목별 파일 헤더·NOTICE 확인 필요).
+- 이전 기록(기획 문서 25행)의 172/36/1 은 일치했고 `Apache-2.0` 1개가 새로 보인다 (합계 210).
+
+### 이번 phase 에서 실제로 쓴 항목
+- 자막 컴포넌트 16개: **전부 `license`·`author` 모두 비어 있음.**
+- 갤러리 배경 5개: `swirl` 만 `Apache-2.0 AND MIT`, 나머지 4개(`mk-background`, `data-chart`, `gallery-tunnel`, `canopy-part-title`)는 비어 있음.
+- 후보 블록 15개: `chatgpt-exchange` 만 작성자(Jake Moran), `color-wheel`·`aurora`·`chrome-orb` 가 `Apache-2.0 AND MIT`, 나머지는 비어 있음.
+
+### 크레딧 방침
+- **현재 방침 (spec-01-01 협의의 추천값, 사용자 추가 결정은 없음)**: 작성자 크레딧은 **영상 위가 아니라 업로드 설명란**에 적는다. 사용한 항목의 `author` 가 있으면 그 값을, 없으면 출처로 "HyperFrames registry (heygen-com/hyperframes)" 를 적는다. `product-and-script-plan.md` §3 의 `credit: <registry 의 author>` 필드로 설명란을 자동 생성한다.
+- **열린 판단**: `license` 가 비어 있는 항목을 상업 채널에 쓰는 것이 문제없는지는 법률 검토 영역이고 확인하지 못했다. 업로드 전에 저장소 라이선스와 개별 파일 헤더 확인이 필요하다.
+
+### 브랜드·제품 모방 블록 처리 기준 (제안, 사용자 확인 필요)
+이름·제목·설명에 브랜드·제품명(ChatGPT, Claude, Instagram, TikTok, Spotify, Slack, YouTube, X, macOS, iOS, Apple 등)이 나오는 블록이 16개 있다 (`stripes` 는 일반 단어라 제외, 이름 검색 기반이라 눈으로 확인하지는 않았다): `apple-money-count`, `chatgpt-exchange`, `claude-exchange`, `code-snippet-apple-terminal-pro`, `instagram-follow`, `ios26-liquid-glass`, `macos-notification`, `macos-tahoe-liquid-glass`, `nyc-paris-flight`, `slack-notification-ad`, `spotify-card`, `tiktok-follow`, `vfx-iphone-device`, `vpn-youtube-spot`, `x-post`, `yt-lower-third`.
+- 제안: 쇼케이스·모음 영상에서는 **기본 제외**한다. 넣어야 하면 "모의 화면, 해당 회사와 무관" 같은 표기를 하고 사용자가 항목별로 승인한다 (`chatgpt-exchange` 는 "Official A.I Ranking" 같은 권위 표시 칩이 기본값이라 오인 위험이 있음, spec-01-01 발견 7).
+- 이번 갤러리와 모음 영상에는 위 블록을 쓰지 않았다 (배경 5개, 자막 16개 목록에 없음).
+
+## Hypit 라이선스 확인과 점검 결과 (phase-01 마감, 2026-10-31)
+
+phase-01 성공 기준 5. `hypit-ai/hypit` 의 `LICENSE` 전문을 GitHub API 로 내려받아 읽었다 (법률 검토 아님). 저장소는 보관(archived) 상태가 아니고 마지막 푸시가 2026-10-30 이다. GitHub 라이선스 메타는 `NOASSERTION`(Other)이다.
+
+### 조건 (전문 요약)
+- "수정된 Apache-2.0 + 추가 조건". 그 외 권리·제한은 Apache-2.0 을 따른다.
+- **허용 (상용 라이선스 불필요)**: 내려받아 자기 인프라에서 직접 실행, **자기 조직의 업무에 사용(상업 업무와 고객 대상 작업 포함)**, 한 조직이 운영하는 단일 테넌트 배포.
+- **상용 라이선스가 필요한 경우**: (a) **멀티테넌트 서비스** — 조직 밖 둘 이상의 당사자가 별도 워크스페이스를 가지는 환경으로 운영하거나 Hypit 기능을 호스팅·SaaS 로 제3자에게 제공 (요금 유무 무관). (b) **상업적 재배포** — Hypit 또는 파생물을 판매·유료 라이선스·상업적 이익을 위해 제3자 제품에 번들로 제공.
+- **표기 의무**: CLI, 생성된 실행 보고서·매니페스트, 거기서 파생된 사용자 대상 화면에서 Hypit 이름·로고·저작권 정보를 제거·수정하지 않는다 (사용자에게 노출되지 않는 용도에는 해당 없음).
+- **결과물 권리**: 제작자는 결과물(영상·음성·이미지·매니페스트)에 권리를 주장하지 않으며 상업 이용을 포함해 조건이 없다. 단 제3자 모델·서비스 제공자를 거쳐 생성된 콘텐츠에는 그 제공자의 약관이 추가될 수 있다.
+
+### 해석과 사용자 판단 요청
+- "본인 채널 운영"은 "자기 조직의 업무"에 해당해 허용으로 읽힌다 (이전 기록과 같음).
+- **이 프로젝트를 다른 사람에게 서비스로 제공하면 (a) 멀티테넌트 조항에 걸릴 수 있어 상용 라이선스가 필요하다.** 개인 제작 도구인지 판매 제품인지는 **사용자 판단 대기** 중이다 (`docs/plan/multi-format-presentation-plan.md` §7 질문 1).
+- 생성 클립에 쓰이는 제3자 모델 제공자의 약관은 확인하지 않았다.
+
+### 점검 범위
+- **설치·실행 점검은 하지 않았다.** 내려받기와 유료 호출이 필요하고 ADR-002 가 Hypit 을 보류했기 때문이다. 쓰기로 정할 때 사용자 확인 후 한다.

@@ -39,9 +39,9 @@
 
 ## Task 4: V3 — PDF 두 방식 비교
 
-- [ ] (a) `snapshot --at` PNG → PDF, (b) 헤드리스 Chrome 인쇄 PDF 를 만들고 페이지 수, 글자 선택, 잘림, 중간 상태를 눈으로 확인
-- [ ] 결과 기록
-- [ ] Commit: `docs(spec-01-04): record pdf export comparison`
+- [x] (a) `snapshot --at` PNG → PDF, (b) 헤드리스 Chrome 인쇄 PDF 를 만들고 페이지 수, 글자 선택, 잘림, 중간 상태를 눈으로 확인 (a 3쪽 이미지, b 3쪽 벡터·글자 231자 추출)
+- [x] 결과 기록
+- [x] Commit: `docs(spec-01-04): record pdf export comparison`
 
 ---
 

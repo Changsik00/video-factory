@@ -26,6 +26,7 @@
 - [ ] 아이디어: sdd stale detection 자동화
 - [ ] 보류: spec-05-02 (dependency 해소 후 재검토)
 -->
+- [ ] 이월: phase-01 이월 항목 전체는 `backlog/phase-01.md` "phase-02 이월 항목" 에 있음 (사용자 판정, lock 방식, PDF 생성기 보존, 러너 테스트, `emoji-pop` 등)
 - [ ] 아이디어: 하나의 대본에서 HTML·PDF·MP4 (ADR-003/004, `docs/plan/multi-format-presentation-plan.md`) — phase-01 회고 후 phase-02 시험 후보
 
 ## 📋 대기 Phase

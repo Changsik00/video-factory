@@ -30,10 +30,10 @@
 
 ## Task 3: V2 — 덱 렌더 제약 확인
 
-- [ ] 덱을 `render --quality draft` 해 "첫 장면만 남음" 재현 여부 확인 (ffprobe 길이, 프레임)
-- [ ] 같은 장면들을 덱 컴포넌트 없는 일반 컴포지션으로 두고 렌더해 전부 재생되는지 비교
-- [ ] 결과와 판정(같은 HTML 공유 가능/불가)을 기록
-- [ ] Commit: `docs(spec-01-04): record deck render constraint`
+- [x] 덱을 `render --quality draft` 해 "첫 장면만 남음" 재현 여부 확인 (ffprobe 길이, 프레임)
+- [x] 같은 장면들을 루트 있는 구조/없는 구조로 렌더해 비교 (루트 없음 4.0초 = 첫 장면만, 루트 있음 16.0초 전부 재생)
+- [x] 결과와 판정(같은 HTML 공유 가능, 단 루트 구조 필요)을 기록
+- [x] Commit: `docs(spec-01-04): record deck render constraint`
 
 ---
 
@@ -57,7 +57,7 @@
 - [ ] `npm test` → Pass 확인
 - [ ] Commit: `feat(spec-01-04): add minimal deck manifest generator`
 
-(V2 가 "공유 가능"이면 건너뛰고 사유를 task 에 기록)
+(V2 가 "공유 가능"이면 건너뛰고 사유를 task 에 기록) — **V2 결과 공유 가능(루트 구조). 이 task 는 건너뜀 예정, V3 후 최종 판단**
 
 ---
 

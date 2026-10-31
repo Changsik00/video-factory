@@ -8,7 +8,7 @@
 ## 📦 진행 중 Phase
 
 <!-- sdd:active:start -->
-- **phase-01** — tool-validation — 4 spec — 다음: (spec 없음)
+(active phase 없음. `bin/sdd phase new <slug>` 로 시작)
 <!-- sdd:active:end -->
 
 ## 📥 spec-x 대기
@@ -39,7 +39,7 @@
 ## ✅ 완료
 
 <!-- sdd:done:start -->
-없음
+- **phase-01** — tool-validation — completed 2026-10-31
 <!-- sdd:done:end -->
 
 ---

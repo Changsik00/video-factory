@@ -198,3 +198,41 @@ test('resolveTimeline: 검증을 통과하지 못한 명세는 오류 코드를 
   assert.throws(() => resolveTimeline(manifest([slide({ duration: 0 })])), /duration_invalid/);
   assert.throws(() => resolveTimeline(null), /manifest_not_object/);
 });
+
+// ---- 샘플 명세 ----
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+
+const SAMPLE_DIR = new URL('../catalog/formats/sample-deck/', import.meta.url).pathname;
+const sample = () => JSON.parse(readFileSync(path.join(SAMPLE_DIR, 'manifest.json'), 'utf8'));
+const sampleExists = (src) => existsSync(path.join(SAMPLE_DIR, src));
+
+test('샘플 명세: 파일 존재까지 포함해 검증을 통과한다', () => {
+  const r = validateManifest(sample(), { exists: sampleExists });
+  assert.deepEqual(r.errors, []);
+  assert.equal(r.ok, true);
+});
+
+test('샘플 명세: 5장, steps 가 있는 슬라이드 2장 이상, 이미지 슬라이드 1장 이상', () => {
+  const m = sample();
+  assert.equal(m.slides.length, 5);
+  assert.ok(m.slides.filter((s) => s.steps?.length).length >= 2);
+  assert.ok(m.slides.filter((s) => s.image).length >= 1);
+});
+
+test('샘플 명세: 시각 변환 결과가 손으로 계산한 값과 같다 (총 27초, points 7s·10s, summary 20s·22s)', () => {
+  const t = resolveTimeline(sample());
+  assert.equal(t.total, 27);
+  assert.deepEqual(t.slides.map((s) => [s.id, s.start, s.end]), [['hook', 0, 4], ['points', 4, 12], ['picture', 12, 18], ['summary', 18, 24], ['closing', 24, 27]]);
+  assert.deepEqual(t.slides.find((s) => s.id === 'points').fragments, [7, 10]);
+  assert.deepEqual(t.slides.find((s) => s.id === 'picture').fragments, [14]);
+  assert.deepEqual(t.slides.find((s) => s.id === 'summary').fragments, [20, 22]);
+});
+
+test('샘플 명세: steps 를 step 으로 오타 내면 검증이 오류를 낸다', () => {
+  const m = sample();
+  m.slides[1].step = m.slides[1].steps;
+  delete m.slides[1].steps;
+  const codes = validateManifest(m).errors.map((e) => `${e.path}:${e.code}`);
+  assert.ok(codes.includes('slides[1].step:unknown_field'), codes.join(','));
+});

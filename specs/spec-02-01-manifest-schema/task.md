@@ -37,11 +37,11 @@
 
 ## Task 3: 샘플 명세와 스키마 문서
 
-- [ ] `catalog/formats/sample-deck/manifest.json` (5장, fragment 슬라이드 2장 이상, 이미지 슬라이드 1장 이상) 작성, 자리표시자 이미지 생성 (`placeholder.png`, 생성한 것임을 문서에 명시)
-- [ ] 샘플 명세가 검증을 통과하는 테스트 추가 (파일 존재 확인 포함)
-- [ ] 수동 검증: `resolveTimeline` 출력 확인, 필드 오타 시 오류 확인
-- [ ] `docs/manifest-schema.md` 작성
-- [ ] Commit: `feat(spec-02-01): add sample deck manifest and schema doc`
+- [x] `catalog/formats/sample-deck/manifest.json` (5장, fragment 슬라이드 2장 이상, 이미지 슬라이드 1장 이상) 작성, 자리표시자 이미지 생성 (`placeholder.png`, 생성한 것임을 문서에 명시)
+- [x] 샘플 명세가 검증을 통과하는 테스트 추가 (파일 존재 확인 포함)
+- [x] 수동 검증: 샘플의 `resolveTimeline` 값(총 27초, points 7·10s, picture 14s, summary 20·22s)을 손 계산과 대조하는 테스트로 고정, `steps` → `step` 오타 시 `unknown_field` 오류를 테스트로 확인, 자리표시자 이미지를 직접 열어 확인
+- [x] `docs/manifest-schema.md` 작성
+- [x] Commit: `feat(spec-02-01): add sample deck manifest and schema doc`
 
 ---
 

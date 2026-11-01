@@ -146,3 +146,56 @@ test('validateManifest: 여러 오류를 한꺼번에 보고하고 예외를 던
   assert.deepEqual(codes(m), ['slides[0].id:id_invalid', 'slides[0].duration:duration_invalid', 'slides[1].heading:heading_missing']);
   assert.equal(validateManifest(m).ok, false);
 });
+
+// ---- resolveTimeline ----
+import { resolveTimeline } from '../scripts/lib/manifest.mjs';
+
+const deck = () =>
+  manifest([
+    slide({ id: 'hook', duration: 4 }),
+    slide({ id: 'points', duration: 8, steps: [3, 6] }),
+    slide({ id: 'closing', duration: 4 }),
+  ]);
+
+test('resolveTimeline: 슬라이드는 순서대로 이어 붙고 전체 길이를 계산한다', () => {
+  const t = resolveTimeline(deck());
+  assert.deepEqual(t.slides.map((s) => [s.id, s.start, s.end]), [['hook', 0, 4], ['points', 4, 12], ['closing', 12, 16]]);
+  assert.equal(t.total, 16);
+});
+
+test('resolveTimeline: fragments 는 슬라이드 시작 + 로컬 steps 의 절대 시각이다 (phase-01 덱: 7s, 10s)', () => {
+  const t = resolveTimeline(deck());
+  assert.deepEqual(t.slides[1].fragments, [7, 10]);
+  assert.deepEqual(t.slides[0].fragments, []);
+});
+
+test('resolveTimeline: 슬라이드를 앞에 끼워 넣으면 뒤 슬라이드의 시작과 fragments 가 자동으로 이동한다', () => {
+  const m = deck();
+  m.slides.unshift(slide({ id: 'cover', duration: 2 }));
+  const t = resolveTimeline(m);
+  assert.deepEqual(t.slides.map((s) => s.start), [0, 2, 6, 14]);
+  assert.deepEqual(t.slides[2].fragments, [9, 12]);
+  assert.equal(t.total, 18);
+});
+
+test('resolveTimeline: 소수 길이를 더해도 부동소수 오차가 남지 않는다', () => {
+  const t = resolveTimeline(manifest([slide({ id: 'a', duration: 0.1 }), slide({ id: 'b', duration: 0.2 }), slide({ id: 'c', duration: 0.3, steps: [0.1] })]));
+  assert.deepEqual(t.slides.map((s) => s.end), [0.1, 0.3, 0.6]);
+  assert.deepEqual(t.slides[2].fragments, [0.4]);
+  assert.equal(t.total, 0.6);
+});
+
+test('resolveTimeline: 원본 슬라이드를 slide 로 돌려주고 명세를 바꾸지 않는다', () => {
+  const m = deck();
+  const before = JSON.stringify(m);
+  const t = resolveTimeline(m);
+  assert.equal(t.slides[1].slide, m.slides[1]);
+  assert.equal(t.slides[1].index, 1);
+  assert.equal(t.slides[1].duration, 8);
+  assert.equal(JSON.stringify(m), before);
+});
+
+test('resolveTimeline: 검증을 통과하지 못한 명세는 오류 코드를 담은 예외를 던진다', () => {
+  assert.throws(() => resolveTimeline(manifest([slide({ duration: 0 })])), /duration_invalid/);
+  assert.throws(() => resolveTimeline(null), /manifest_not_object/);
+});

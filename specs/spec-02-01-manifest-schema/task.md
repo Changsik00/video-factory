@@ -25,13 +25,13 @@
 ## Task 2: 시각 변환 `resolveTimeline` (TDD)
 
 ### 2-1. 테스트 작성 (TDD Red)
-- [ ] 절대 `start`/`end`, 절대 `fragments`(= start + 로컬 steps), 전체 길이, 슬라이드를 앞에 끼워 넣으면 뒤 슬라이드 시각이 이동하는 사례
-- [ ] 테스트 실행 → Fail 확인
-- [ ] Commit: `test(spec-02-01): add failing tests for timeline resolution`
+- [x] 절대 `start`/`end`, 절대 `fragments`(= start + 로컬 steps), 전체 길이, 슬라이드를 앞에 끼워 넣으면 뒤 슬라이드 시각이 이동하는 사례
+- [x] 테스트 실행 → Fail 확인 (export 없음)
+- [x] Commit: `test(spec-02-01): add failing tests for timeline resolution`
 
 ### 2-2. 구현 (TDD Green)
-- [ ] `resolveTimeline` 구현, `npm test` → Pass 확인
-- [ ] Commit: `feat(spec-02-01): add timeline resolution`
+- [x] `resolveTimeline` 구현 (검증 실패 시 예외, 밀리초 반올림), `npm test` → Pass 확인 (169개)
+- [x] Commit: `feat(spec-02-01): add timeline resolution`
 
 ---
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateManifest } from '../scripts/lib/manifest.mjs';
+import { resolveTimeline, validateManifest } from '../scripts/lib/manifest.mjs';
 
 const slide = (over = {}) => ({ id: 'intro', duration: 4, heading: '제목', ...over });
 const manifest = (slides = [slide()], over = {}) => ({ title: '샘플', lang: 'ko', slides, ...over });
@@ -148,7 +148,6 @@ test('validateManifest: 여러 오류를 한꺼번에 보고하고 예외를 던
 });
 
 // ---- resolveTimeline ----
-import { resolveTimeline } from '../scripts/lib/manifest.mjs';
 
 const deck = () =>
   manifest([

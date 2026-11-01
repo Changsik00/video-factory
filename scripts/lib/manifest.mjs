@@ -95,3 +95,21 @@ export function validateManifest(manifest, { exists } = {}) {
   }
   return { ok: errors.length === 0, errors };
 }
+
+// 부동소수 누적 오차를 지우기 위해 밀리초 단위로 반올림한다.
+const round = (x) => Math.round(x * 1000) / 1000;
+
+// 명세의 로컬 시각을 절대 시각으로 바꾼다. present 의 fragments(마스터 타임라인 절대 시각)와 영상 장면 길이에 쓴다.
+// 검증을 통과하지 못한 명세는 오류 코드를 담은 예외를 던진다 (먼저 validateManifest 로 확인할 것).
+export function resolveTimeline(manifest) {
+  const { ok, errors } = validateManifest(manifest);
+  if (!ok) throw new Error(`명세가 유효하지 않습니다: ${errors.map((e) => `${e.path || '(root)'} ${e.code}`).join(', ')}`);
+  let cursor = 0;
+  const slides = manifest.slides.map((slide, index) => {
+    const start = round(cursor);
+    const end = round(cursor + slide.duration);
+    cursor = end;
+    return { id: slide.id, index, start, end, duration: slide.duration, fragments: (slide.steps ?? []).map((t) => round(start + t)), slide };
+  });
+  return { total: round(cursor), slides };
+}

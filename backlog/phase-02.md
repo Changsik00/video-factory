@@ -43,7 +43,7 @@ phase-01 은 HyperFrames 도구의 능력을 실측했다. 블록 15개와 자�
 <!-- sdd:specs:start -->
 | ID | 슬러그 | 우선순위 | 상태 | 디렉토리 |
 |---|---|:---:|---|---|
-| `spec-02-01` | manifest-schema | P? | Active | `specs/spec-02-01-manifest-schema/` |
+| `spec-02-01` | manifest-schema | P? | Merged | `specs/spec-02-01-manifest-schema/` |
 <!-- sdd:specs:end -->
 
 > 상태 허용값: `Backlog` / `In Progress` / `Merged`

@@ -8,7 +8,7 @@
 ## 📦 진행 중 Phase
 
 <!-- sdd:active:start -->
-- **phase-02** — one-script-three-outputs — 1 spec — 다음: spec-02-01-manifest-schema
+- **phase-02** — one-script-three-outputs — 1 spec — 다음: (spec 없음)
 <!-- sdd:active:end -->
 
 ## 📥 spec-x 대기

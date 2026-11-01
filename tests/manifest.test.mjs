@@ -97,7 +97,7 @@ test('validateManifest: steps 값은 0 초과이고 duration 이하여야 한다
 test('validateManifest: items 는 배열이고 원소는 문자열 또는 {text, step} 이다', () => {
   assert.deepEqual(codes(manifest([slide({ items: 'x' })])), ['slides[0].items:items_invalid']);
   assert.deepEqual(codes(manifest([slide({ items: [3] })])), ['slides[0].items[0]:item_invalid']);
-  assert.deepEqual(codes(manifest([slide({ items: [{ step: 0 }] })])), ['slides[0].items[0].text:item_text_missing']);
+  assert.deepEqual(codes(manifest([slide({ steps: [1], items: [{ step: 0 }] })])), ['slides[0].items[0].text:item_text_missing']);
   assert.deepEqual(codes(manifest([slide({ items: [{ text: '' }] })])), ['slides[0].items[0].text:item_text_missing']);
 });
 
@@ -129,7 +129,7 @@ test('validateManifest: exists 를 주면 이미지 파일이 없을 때 거부�
 });
 
 test('validateManifest: 알 수 없는 필드는 어느 단계에서든 거부한다 (오타 방지)', () => {
-  assert.deepEqual(codes(manifest([slide()], { extra: 1 })), [':unknown_field']);
+  assert.deepEqual(codes(manifest([slide()], { extra: 1 })), ['extra:unknown_field']);
   assert.deepEqual(codes(manifest([slide({ step: [1] })])), ['slides[0].step:unknown_field']);
   assert.deepEqual(codes(manifest([slide({ items: [{ text: 'a', stp: 1 }] })])), ['slides[0].items[0].stp:unknown_field']);
   assert.deepEqual(codes(manifest([slide({ image: { src: 'a.png', size: 1 } })])), ['slides[0].image.size:unknown_field']);

@@ -11,14 +11,14 @@
 - [x] `git checkout -b spec-02-01-manifest-schema` (spec 생성 직후 생성됨)
 
 ### 1-2. 테스트 작성 (TDD Red)
-- [ ] `tests/manifest.test.mjs`: 유효 사례 + 무효 사례 10개 이상(슬라이드 없음, id 중복·형식, duration, heading, steps 순서·범위, items.step 범위, steps 없이 step, 이미지 파일 없음(`exists` 주입), 알 수 없는 필드, notes/items 형식) 각각 안정적인 `code` 와 `path` 확인
-- [ ] 테스트 실행 → Fail 확인
-- [ ] Commit: `test(spec-02-01): add failing tests for manifest validation`
+- [x] `tests/manifest.test.mjs`: 유효 사례 + 무효 사례 10개 이상(슬라이드 없음, id 중복·형식, duration, heading, steps 순서·범위, items.step 범위, steps 없이 step, 이미지 파일 없음(`exists` 주입), 알 수 없는 필드, notes/items 형식) 각각 안정적인 `code` 와 `path` 확인
+- [x] 테스트 실행 → Fail 확인 (모듈 없음)
+- [x] Commit: `test(spec-02-01): add failing tests for manifest validation`
 
 ### 1-3. 구현 (TDD Green)
-- [ ] `scripts/lib/manifest.mjs`: `validateManifest`
-- [ ] `npm test` → Pass 확인 (기존 141개 유지)
-- [ ] Commit: `feat(spec-02-01): add manifest validation`
+- [x] `scripts/lib/manifest.mjs`: `validateManifest` (구현 중 테스트 2건의 기대값을 정정: 최상위 알 수 없는 필드 path 를 필드명으로, `{step}` 만 있는 항목 사례에 steps 를 추가해 한 가지 오류만 검증)
+- [x] `npm test` → Pass 확인 (기존 141개 + 새 22개 = 163개)
+- [x] Commit: `feat(spec-02-01): add manifest validation`
 
 ---
 

@@ -1,0 +1,50 @@
+{
+  "title": "샘플 덱 (spec-02-01)",
+  "lang": "ko",
+  "slides": [
+    {
+      "id": "hook",
+      "duration": 4,
+      "heading": "하나의 대본, 세 가지 결과물",
+      "subheading": "HTML 발표 · PDF · MP4",
+      "notes": "첫 장. 제목만 보인다."
+    },
+    {
+      "id": "points",
+      "duration": 8,
+      "heading": "단계(fragment) 진행",
+      "steps": [3, 6],
+      "items": [
+        "슬라이드는 최종 상태를 가진다",
+        { "text": "단계마다 항목이 하나씩 나타난다", "step": 0 },
+        { "text": "화살표로 다음 단계로 넘어간다", "step": 1 }
+      ],
+      "notes": "발표에서는 첫 단계 시각에서 진입한다."
+    },
+    {
+      "id": "picture",
+      "duration": 6,
+      "heading": "이미지가 있는 슬라이드",
+      "steps": [2],
+      "items": [{ "text": "자리표시자 이미지 (생성한 파일, 실제 자산 아님)", "step": 0 }],
+      "image": { "src": "images/placeholder.png", "alt": "자리표시자 이미지" }
+    },
+    {
+      "id": "summary",
+      "duration": 6,
+      "heading": "정리",
+      "steps": [2, 4],
+      "items": [
+        { "text": "명세 → 덱 → 발표", "step": 0 },
+        { "text": "명세 → PDF", "step": 0 },
+        { "text": "명세 → MP4", "step": 1 }
+      ]
+    },
+    {
+      "id": "closing",
+      "duration": 3,
+      "heading": "끝",
+      "subheading": "spec-02-01 샘플 명세"
+    }
+  ]
+}
